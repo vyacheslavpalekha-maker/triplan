@@ -1,5 +1,6 @@
 import { AthleteProfile, RaceConfig, TrainingSession, WeekPlan, Distance, Level, Sport, Intensity, SessionType, TrainingLogEntry, FitnessMetrics } from './types';
 import { getPlanAdjustments } from './healthAnalyzer';
+import { getTrainingIntensityMultiplier } from './goalAnalyzer';
 
 function getPhase(weekNumber: number, totalWeeks: number): string {
   const progress = weekNumber / totalWeeks;
@@ -253,7 +254,8 @@ function generateRunSession(day: number, intensity: Intensity, type: SessionType
 export function generateWeekPlan(
   profile: AthleteProfile,
   raceConfig: RaceConfig,
-  weekNumber: number
+  weekNumber: number,
+  goalDifficulty: 'easy' | 'realistic' | 'challenging' | 'unrealistic' = 'realistic'
 ): WeekPlan {
   const phase = getPhase(weekNumber, raceConfig.weeksToRace);
   const phaseMultiplier = getPhaseMultiplier(weekNumber, raceConfig.weeksToRace);
@@ -262,13 +264,16 @@ export function generateWeekPlan(
 
   // Получаем корректировки на основе здоровья
   const healthAdj = getPlanAdjustments(profile);
+  
+  // Множитель интенсивности на основе целевого времени
+  const goalMultiplier = getTrainingIntensityMultiplier(goalDifficulty);
 
   const totalBaseHours = baseHours.swim + baseHours.bike + baseHours.run;
   const hourRatio = profile.weeklyHours / totalBaseHours;
 
-  const swimHours = baseHours.swim * hourRatio * phaseMultiplier * levelMultiplier * healthAdj.swimMultiplier;
-  const bikeHours = baseHours.bike * hourRatio * phaseMultiplier * levelMultiplier * healthAdj.bikeMultiplier;
-  const runHours = baseHours.run * hourRatio * phaseMultiplier * levelMultiplier * healthAdj.runMultiplier;
+  const swimHours = baseHours.swim * hourRatio * phaseMultiplier * levelMultiplier * healthAdj.swimMultiplier * goalMultiplier;
+  const bikeHours = baseHours.bike * hourRatio * phaseMultiplier * levelMultiplier * healthAdj.bikeMultiplier * goalMultiplier;
+  const runHours = baseHours.run * hourRatio * phaseMultiplier * levelMultiplier * healthAdj.runMultiplier * goalMultiplier;
 
   const sessions: TrainingSession[] = [];
   const days = profile.trainingDays;
@@ -388,10 +393,14 @@ export function generateWeekPlan(
   };
 }
 
-export function generateFullPlan(profile: AthleteProfile, raceConfig: RaceConfig): WeekPlan[] {
+export function generateFullPlan(
+  profile: AthleteProfile,
+  raceConfig: RaceConfig,
+  goalDifficulty: 'easy' | 'realistic' | 'challenging' | 'unrealistic' = 'realistic'
+): WeekPlan[] {
   const plans: WeekPlan[] = [];
   for (let i = 1; i <= raceConfig.weeksToRace; i++) {
-    plans.push(generateWeekPlan(profile, raceConfig, i));
+    plans.push(generateWeekPlan(profile, raceConfig, i, goalDifficulty));
   }
   return plans;
 }

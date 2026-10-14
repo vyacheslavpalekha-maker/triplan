@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { AthleteProfile, RaceConfig, WeekPlan, TrainingLogEntry, Badge, Tab } from './types';
 import { generateFullPlan } from './planGenerator';
+import { analyzeGoalRealism } from './goalAnalyzer';
 import { AthleteProfileForm } from './components/AthleteProfileForm';
 import { RaceConfigForm } from './components/RaceConfigForm';
 import { WeekPlanView } from './components/WeekPlanView';
@@ -60,6 +61,10 @@ const defaultRaceConfig: RaceConfig = {
   distance: 'olympic',
   weeksToRace: 16,
   raceDate: new Date(Date.now() + 16 * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  targetTime: '02:30:00',
+  targetSwimTime: 1500,
+  targetBikeTime: 4500,
+  targetRunTime: 3000,
 };
 
 const defaultBadges: Badge[] = [
@@ -130,9 +135,13 @@ function App() {
   const [log, setLog] = useState<TrainingLogEntry[]>([]);
   const [badges, setBadges] = useState<Badge[]>(defaultBadges);
 
-  const plans: WeekPlan[] = useMemo(() => {
-    return generateFullPlan(profile, raceConfig);
+  const goalAnalysis = useMemo(() => {
+    return analyzeGoalRealism(profile, raceConfig);
   }, [profile, raceConfig]);
+
+  const plans: WeekPlan[] = useMemo(() => {
+    return generateFullPlan(profile, raceConfig, goalAnalysis.difficulty);
+  }, [profile, raceConfig, goalAnalysis.difficulty]);
 
   const currentPlan = plans[currentWeek - 1];
 
@@ -241,7 +250,7 @@ function App() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AthleteProfileForm profile={profile} onChange={setProfile} />
               <div className="space-y-6">
-                <RaceConfigForm raceConfig={raceConfig} onChange={setRaceConfig} />
+                <RaceConfigForm raceConfig={raceConfig} onChange={setRaceConfig} profile={profile} />
                 {/* Quick summary */}
                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-5 text-white shadow-xl">
                   <h3 className="font-bold text-base mb-3">Параметры плана</h3>
@@ -259,8 +268,8 @@ function App() {
                       <div className="text-[10px] text-white/70">дней</div>
                     </div>
                     <div className="bg-white/10 rounded-xl p-3">
-                      <div className="text-xl font-bold">{Math.round(profile.weeklyHours * raceConfig.weeksToRace)}</div>
-                      <div className="text-[10px] text-white/70">всего часов</div>
+                      <div className="text-xl font-bold">{raceConfig.targetTime || '—'}</div>
+                      <div className="text-[10px] text-white/70">🎯 цель</div>
                     </div>
                   </div>
                 </div>
@@ -288,6 +297,11 @@ function App() {
                     raceConfig.distance === 'olympic' ? 'Олимпийская' :
                     raceConfig.distance === 'half_iron' ? '70.3' : 'IRONMAN'
                   }» • Старт: {new Date(raceConfig.raceDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
+                  {raceConfig.targetTime && (
+                    <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                      🎯 {raceConfig.targetTime}
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -300,6 +314,7 @@ function App() {
                     totalWeeks={raceConfig.weeksToRace}
                     onWeekChange={setCurrentWeek}
                     profile={profile}
+                    raceConfig={raceConfig}
                   />
                 )}
               </div>

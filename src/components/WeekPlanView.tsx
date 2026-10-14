@@ -2,12 +2,16 @@ import React, { useState } from 'react';
 import { WeekPlan, TrainingSession, Sport, AthleteProfile } from '../types';
 import { analyzeHealthRestrictions } from '../healthAnalyzer';
 
+import { RaceConfig } from '../types';
+import { calculatePace, formatTime } from '../goalAnalyzer';
+
 interface Props {
   plan: WeekPlan;
   weekNumber: number;
   totalWeeks: number;
   onWeekChange: (week: number) => void;
   profile: AthleteProfile;
+  raceConfig: RaceConfig;
 }
 
 const DAY_NAMES = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -64,7 +68,7 @@ const SessionCard: React.FC<{ session: TrainingSession }> = ({ session }) => {
   );
 };
 
-export const WeekPlanView: React.FC<Props> = ({ plan, weekNumber, totalWeeks, onWeekChange, profile }) => {
+export const WeekPlanView: React.FC<Props> = ({ plan, weekNumber, totalWeeks, onWeekChange, profile, raceConfig }) => {
   const sessionsByDay: Record<number, TrainingSession[]> = {};
   plan.sessions.forEach((s) => {
     if (!sessionsByDay[s.day]) sessionsByDay[s.day] = [];
@@ -73,6 +77,13 @@ export const WeekPlanView: React.FC<Props> = ({ plan, weekNumber, totalWeeks, on
 
   const healthRecs = analyzeHealthRestrictions(profile);
   const hasHealthRestrictions = healthRecs.length > 0;
+  
+  // Рассчитываем целевые темпы
+  const distances: Record<string, number> = {
+    sprint: 0.75, olympic: 1.5, 'half_iron': 1.9, ironman: 3.8,
+  };
+  const targetSwimPace = raceConfig.targetSwimTime / (distances[raceConfig.distance] || 1.5); // сек/км
+  const targetRunPace = raceConfig.targetRunTime / (raceConfig.distance === 'sprint' ? 5 : raceConfig.distance === 'olympic' ? 10 : raceConfig.distance === 'half_iron' ? 21.1 : 42.2);
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
@@ -92,6 +103,11 @@ export const WeekPlanView: React.FC<Props> = ({ plan, weekNumber, totalWeeks, on
             <span className="ml-2 inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
               TSS: {plan.plannedTSS}
             </span>
+            {raceConfig.targetTime && (
+              <span className="ml-2 inline-block px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs">
+                🎯 Цель: {raceConfig.targetTime}
+              </span>
+            )}
           </p>
         </div>
 
@@ -122,14 +138,29 @@ export const WeekPlanView: React.FC<Props> = ({ plan, weekNumber, totalWeeks, on
         <div className="bg-blue-50 rounded-xl p-3 text-center">
           <div className="text-lg font-bold text-blue-600">{plan.swimVolume}ч</div>
           <div className="text-xs text-blue-500">🏊 Плавание</div>
+          {raceConfig.targetTime && (
+            <div className="text-[10px] text-blue-400 mt-1">
+              Цель: {Math.floor(raceConfig.targetSwimTime / 60)}:{(raceConfig.targetSwimTime % 60).toString().padStart(2, '0')}
+            </div>
+          )}
         </div>
         <div className="bg-green-50 rounded-xl p-3 text-center">
           <div className="text-lg font-bold text-green-600">{plan.bikeVolume}ч</div>
           <div className="text-xs text-green-500">🚴 Велосипед</div>
+          {raceConfig.targetTime && (
+            <div className="text-[10px] text-green-400 mt-1">
+              Цель: {Math.floor(raceConfig.targetBikeTime / 3600)}:{Math.floor((raceConfig.targetBikeTime % 3600) / 60).toString().padStart(2, '0')}
+            </div>
+          )}
         </div>
         <div className="bg-red-50 rounded-xl p-3 text-center">
           <div className="text-lg font-bold text-red-600">{plan.runVolume}ч</div>
           <div className="text-xs text-red-500">🏃 Бег</div>
+          {raceConfig.targetTime && (
+            <div className="text-[10px] text-red-400 mt-1">
+              Цель: {Math.floor(raceConfig.targetRunTime / 60)}:{(raceConfig.targetRunTime % 60).toString().padStart(2, '0')}
+            </div>
+          )}
         </div>
       </div>
 

@@ -59,6 +59,10 @@ export interface RaceConfig {
   distance: Distance;
   weeksToRace: number;
   raceDate: string;
+  targetTime: string; // формат "HH:MM:SS" или "MM:SS"
+  targetSwimTime: number; // секунды
+  targetBikeTime: number; // секунды
+  targetRunTime: number; // секунды
 }
 
 export interface TrainingSession {
