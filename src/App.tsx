@@ -11,6 +11,7 @@ import { Analytics } from './components/Analytics';
 import { NutritionRecovery } from './components/NutritionRecovery';
 import { StrengthRecovery } from './components/StrengthRecovery';
 import { ThemeProvider, useTheme } from './ThemeContext';
+import { Toaster } from './components/ui/toaster';
 
 const defaultProfile: AthleteProfile = {
   name: '',
@@ -379,6 +380,7 @@ function App() {
   return (
     <ThemeProvider>
       <AppContent />
+      <Toaster />
     </ThemeProvider>
   );
 }

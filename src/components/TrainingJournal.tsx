@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TrainingLogEntry, Sport, TrainingSession } from '../types';
+import toast from 'react-hot-toast';
 
 interface Props {
   log: TrainingLogEntry[];
@@ -53,6 +54,7 @@ export const TrainingJournal: React.FC<Props> = ({ log, sessions, onAddEntry, on
       muscleSoreness: newEntry.muscleSoreness || 2,
     };
     onAddEntry(entry);
+    toast.success('Тренировка добавлена в журнал!');
     setShowForm(false);
     setNewEntry({ sport: 'run', actualDuration: 0, distance: 0, avgHR: 0, avgPace: '', rpe: 5, calories: 0, tss: 0, comment: '', mood: 3, sleepHours: 7, sleepQuality: 3, muscleSoreness: 2, date: new Date().toISOString().split('T')[0] });
   };
@@ -226,7 +228,16 @@ export const TrainingJournal: React.FC<Props> = ({ log, sessions, onAddEntry, on
                 <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{SPORT_NAMES[entry.sport]}</span>
                 <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{entry.date}</span>
               </div>
-              <button onClick={() => onDeleteEntry(entry.id)}
+              <button onClick={() => {
+                onDeleteEntry(entry.id);
+                toast('Тренировка удалена', {
+                  icon: '🗑️',
+                  style: {
+                    background: 'var(--bg-primary)',
+                    color: 'var(--text-primary)',
+                  },
+                });
+              }}
                 className="transition-colors"
                 style={{ color: 'var(--text-tertiary)' }}>
                 <i className="fas fa-trash-alt text-sm"></i>
