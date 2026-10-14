@@ -78,17 +78,17 @@ function getTargetPace(sport: Sport, intensity: Intensity, profile: AthleteProfi
 
 function isSportAllowed(sport: Sport, dayIndex: number, profile: AthleteProfile): boolean {
   const prefs = profile.dayPreferences[dayIndex];
-  // Если предпочтения не заданы или пустые — любой спорт разрешён
-  if (!prefs || prefs.length === 0) return true;
+  // Если предпочтения не заданы или пустые — этот день ОТДЫХА
+  if (!prefs || prefs.length === 0) return false;
   return prefs.includes(sport);
 }
 
 /**
  * Находит дни для размещения тренировок данного вида спорта.
- * Приоритет:
- * 1. Дни, где пользователь явно указал этот спорт
- * 2. Дни без ограничений (пустые предпочтения)
- * 3. Оставшиеся дни (если совсем не хватает)
+ * Логика:
+ * - Дни, где пользователь отметил этот спорт → можно ставить
+ * - Дни, где отмечены другие виды спорта → нельзя
+ * - Дни без отметок → день отдыха, нельзя
  */
 function findDaysForSport(
   sport: Sport,
@@ -98,47 +98,24 @@ function findDaysForSport(
 ): number[] {
   const MAX_PER_DAY = 2; // не более 2 тренировок в день
 
-  // Приоритет 1: дни, где пользователь явно хочет этот спорт
-  const explicitDays: number[] = [];
+  // Находим все дни, где пользователь явно указал этот вид спорта
+  const allowedDays: number[] = [];
   for (let d = 0; d < 7; d++) {
     const prefs = profile.dayPreferences[d];
     if (prefs && prefs.length > 0 && prefs.includes(sport)) {
-      explicitDays.push(d);
+      allowedDays.push(d);
     }
   }
-
-  // Приоритет 2: дни без ограничений
-  const neutralDays: number[] = [];
-  for (let d = 0; d < 7; d++) {
-    if (explicitDays.includes(d)) continue;
-    const prefs = profile.dayPreferences[d];
-    if (!prefs || prefs.length === 0) {
-      neutralDays.push(d);
-    }
-  }
-
-  // Приоритет 3: все остальные дни (где спорт не запрещён явно)
-  const fallbackDays: number[] = [];
-  for (let d = 0; d < 7; d++) {
-    if (explicitDays.includes(d) || neutralDays.includes(d)) continue;
-    if (isSportAllowed(sport, d, profile)) {
-      fallbackDays.push(d);
-    }
-  }
-
-  // Собираем кандидатов в порядке приоритета
-  const candidates = [...explicitDays, ...neutralDays, ...fallbackDays];
 
   // Фильтруем по загруженности дня
-  const available = candidates.filter(d => (occupiedDays.get(d) || 0) < MAX_PER_DAY);
+  const available = allowedDays.filter(d => (occupiedDays.get(d) || 0) < MAX_PER_DAY);
 
   // Берём нужное количество, равномерно распределяя
   if (available.length >= neededCount) {
-    // Равномерно размазываем по неделе
     return distributeEvenly(available, neededCount);
   }
 
-  // Если не хватает — берём все доступные
+  // Если не хватает — берём все доступные (пользователь получит меньше тренировок, чем запланировано)
   return available;
 }
 

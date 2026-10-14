@@ -31,10 +31,52 @@ export const AthleteProfileForm: React.FC<Props> = ({ profile, onChange }) => {
   const updateDayPref = (dayIndex: number, sport: Sport, checked: boolean) => {
     const current = profile.dayPreferences[dayIndex] || [];
     const updated = checked ? [...current, sport] : current.filter(s => s !== sport);
+    const newPrefs = { ...profile.dayPreferences, [dayIndex]: updated };
+    // Автоматически обновляем trainingDays на основе количества отмеченных дней
+    const markedDays = [0,1,2,3,4,5,6].filter(d => (newPrefs[d] || []).length > 0).length;
     onChange({
       ...profile,
-      dayPreferences: { ...profile.dayPreferences, [dayIndex]: updated }
+      dayPreferences: newPrefs,
+      trainingDays: markedDays > 0 ? markedDays : profile.trainingDays,
     });
+  };
+
+  const autoFillScheduleForDays = (days: number) => {
+    // Типичное распределение для триатлона:
+    // Пн: плавание + бег
+    // Вт: велосипед
+    // Ср: плавание + бег
+    // Чт: велосипед
+    // Пт: плавание + бег
+    // Сб: велосипед (длительная)
+    // Вс: бег (длительный)
+    const templates: Record<number, Sport[][]> = {
+      3: [
+        ['swim'], ['bike'], [], ['run'], [], ['bike'], ['run']
+      ],
+      4: [
+        ['swim', 'run'], ['bike'], [], ['swim'], ['bike'], [], ['run']
+      ],
+      5: [
+        ['swim', 'run'], ['bike'], ['swim', 'run'], ['bike'], ['run'], [], []
+      ],
+      6: [
+        ['swim', 'run'], ['bike'], ['swim', 'run'], ['bike', 'run'], ['swim'], ['bike'], ['run']
+      ],
+      7: [
+        ['swim', 'run'], ['bike'], ['swim', 'run'], ['bike', 'run'], ['swim', 'run'], ['bike'], ['run']
+      ],
+    };
+    const template = templates[days] || templates[5];
+    const newPrefs: Record<number, Sport[]> = {};
+    for (let i = 0; i < 7; i++) {
+      newPrefs[i] = template[i] || [];
+    }
+    onChange({ ...profile, trainingDays: days, dayPreferences: newPrefs });
+  };
+
+  const autoFillSchedule = () => {
+    autoFillScheduleForDays(profile.trainingDays);
   };
 
   const sections = [
@@ -129,7 +171,11 @@ export const AthleteProfileForm: React.FC<Props> = ({ profile, onChange }) => {
                 <label className="block text-sm font-medium text-gray-600 mb-1">Дней тренировок</label>
                 <div className="flex gap-1">
                   {[3, 4, 5, 6, 7].map((d) => (
-                    <button key={d} onClick={() => update('trainingDays', d)}
+                    <button key={d} onClick={() => {
+                      update('trainingDays', d);
+                      // Автоматически перераспределяем расписание
+                      autoFillScheduleForDays(d);
+                    }}
                       className={`flex-1 py-2.5 rounded-xl font-medium transition-all text-sm ${profile.trainingDays === d ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                       {d}
                     </button>
@@ -277,20 +323,48 @@ export const AthleteProfileForm: React.FC<Props> = ({ profile, onChange }) => {
             <div className="bg-blue-50 rounded-xl p-3 mb-2">
               <p className="text-xs text-blue-700">
                 <i className="fas fa-info-circle mr-1"></i>
-                Отметьте галочками, какие виды спорта вы хотите делать в каждый день.
-                Пустые дни = план распределит автоматически. План учтёт ваши предпочтения при расстановке тренировок.
+                <strong>Отметьте дни тренировок и виды спорта для каждого дня.</strong><br/>
+                Дни без отметок = дни отдыха. План будет ставить тренировки ТОЛЬКО в отмеченные дни.
               </p>
             </div>
+
+            {/* Training days counter + auto-fill */}
+            <div className="flex items-center justify-between gap-2">
+              {(() => {
+                const markedDays = [0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).length > 0).length;
+                return (
+                  <span className="text-xs text-gray-500">
+                    Тренировочных дней: <strong className="text-gray-700">{markedDays}</strong> / {profile.trainingDays}
+                  </span>
+                );
+              })()}
+              <button
+                onClick={autoFillSchedule}
+                className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+              >
+                <i className="fas fa-magic text-[10px]"></i>
+                Автозаполнить
+              </button>
+            </div>
+
             {DAY_NAMES.map((dayName, dayIndex) => {
               const prefs = profile.dayPreferences[dayIndex] || [];
+              const isRestDay = prefs.length === 0;
               const isWeekend = dayIndex >= 5;
               return (
                 <div key={dayIndex} className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${
-                  prefs.length > 0 ? 'border-blue-200 bg-blue-50/50' : 'border-gray-100 bg-gray-50'
+                  isRestDay 
+                    ? 'border-gray-200 bg-gray-50 opacity-60' 
+                    : 'border-blue-200 bg-blue-50/50'
                 }`}>
-                  <div className="w-24 shrink-0">
-                    <span className="text-sm font-medium text-gray-700">{dayName}</span>
-                    {isWeekend && <span className="text-[10px] text-orange-400 ml-1">вых</span>}
+                  <div className="w-28 shrink-0">
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-medium text-gray-700">{dayName}</span>
+                      {isWeekend && <span className="text-[10px] text-orange-400">вых</span>}
+                    </div>
+                    {isRestDay && (
+                      <div className="text-[10px] text-gray-400 mt-0.5">🛋 День отдыха</div>
+                    )}
                   </div>
                   <div className="flex gap-2 flex-wrap flex-1">
                     {(['swim', 'bike', 'run'] as Sport[]).map(sport => {
@@ -314,31 +388,25 @@ export const AthleteProfileForm: React.FC<Props> = ({ profile, onChange }) => {
                       );
                     })}
                   </div>
-                  {prefs.length === 0 && (
-                    <span className="text-[10px] text-gray-300 shrink-0">авто</span>
-                  )}
                 </div>
               );
             })}
 
             {/* Summary */}
             <div className="mt-3 p-3 bg-gray-50 rounded-xl">
-              <div className="text-xs font-medium text-gray-500 mb-2">Распределение по дням:</div>
-              <div className="flex gap-3 text-xs">
+              <div className="text-xs font-medium text-gray-500 mb-2">Тренировок по видам спорта:</div>
+              <div className="flex gap-4 text-xs">
                 <span className="text-blue-600">
-                  🏊 {[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('swim')).length > 0
-                    ? `${[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('swim')).length} дн.`
-                    : 'авто'}
+                  🏊 {[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('swim')).length} дн.
                 </span>
                 <span className="text-green-600">
-                  🚴 {[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('bike')).length > 0
-                    ? `${[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('bike')).length} дн.`
-                    : 'авто'}
+                  🚴 {[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('bike')).length} дн.
                 </span>
                 <span className="text-red-600">
-                  🏃 {[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('run')).length > 0
-                    ? `${[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('run')).length} дн.`
-                    : 'авто'}
+                  🏃 {[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('run')).length} дн.
+                </span>
+                <span className="text-gray-400 ml-auto">
+                  🛋 {[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).length === 0).length} дн. отдыха
                 </span>
               </div>
             </div>

@@ -41,13 +41,13 @@ const defaultProfile: AthleteProfile = {
     swim100m: 90,
   },
   dayPreferences: {
-    0: ['swim', 'run'],
-    1: ['bike'],
-    2: ['swim', 'run'],
-    3: ['bike', 'run'],
-    4: ['swim', 'run'],
-    5: ['bike'],
-    6: ['run'],
+    0: ['swim', 'run'],      // Пн - тренировка
+    1: ['bike'],              // Вт - тренировка
+    2: ['swim', 'run'],       // Ср - тренировка
+    3: ['bike', 'run'],       // Чт - тренировка
+    4: ['swim', 'run'],       // Пт - тренировка
+    5: [],                    // Сб - отдых
+    6: [],                    // Вс - отдых
   },
   healthRestrictions: {
     injuries: [],
