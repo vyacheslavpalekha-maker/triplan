@@ -337,12 +337,12 @@ function generateBikeSession(day: number, intensity: Intensity, type: SessionTyp
     long: `Длительная поездка: аэробная база, ${Math.round(duration / 60 * 30)}км`,
     recovery: `Восстановительная поездка: лёгкий крутинг, зона 1-2`,
     technique: `Техническая работа: cadence drills, работа на холмах`,
-    brick: `Велосипед + переход к бегу: ${Math.round(duration * 0.8)}мин вело + ${Math.round(duration * 0.2)}мин бег`,
+    brick: `🔗 БРИК: Велосипед → Бег (${Math.round(duration * 0.7)}мин вело + ${Math.round(duration * 0.3)}мин бег)`,
     strength: `Силовая тренировка на велосипеде: работа на больших передачах`,
     core: `Укрепление кора: упражнения на стабилизацию во время поездки`,
     stretch: `Растяжка после велосипеда: 10-15 мин`,
-    swim_brick: `Брик: плавание + велосипед`,
-    bike_run_brick: `Брик: велосипед + бег`,
+    swim_brick: `🔗 БРИК: Плавание → Велосипед`,
+    bike_run_brick: `🔗 БРИК: Велосипед → Бег`,
   };
 
   const details: Record<SessionType, string> = {
@@ -351,12 +351,31 @@ function generateBikeSession(day: number, intensity: Intensity, type: SessionTyp
     long: `Разминка 15мин. Основная: ровный темп зона 2, питание каждые 20мин. Заминка 10мин.`,
     recovery: `Лёгкий крутинг 60мин, зона 1-2. Каденс 85-95 об/мин.`,
     technique: `Разминка 10мин. Single leg drills 4x2мин. Hill repeats 6x2мин. Заминка 10мин.`,
-    brick: `Вело: 40мин зона 3. Переход: бег 10мин зона 2-3 для адаптации ног.`,
+    brick: `🔗 КОМБИНИРОВАННАЯ ТРЕНИРОВКА (Вело → Бег)
+
+Велосипед: ${Math.round(duration * 0.7)}мин в зоне 3 (темповый)
+⚡ ПЕРЕХОД: смена обуви за 1-2 мин
+Бег: ${Math.round(duration * 0.3)}мин в зоне 2-3
+
+Цель: адаптация ног к бегу после велосипеда, отработка быстрого перехода.
+Ноги будут "ватными" — это нормально! Фокус на каденсе 170-180 шагов/мин.`,
     strength: `Разминка 15мин. Основная: 6x3мин на большой передаче (50-60 об/мин), зона 3. Заминка 15мин.`,
     core: `Во время поездки: 3x5мин с акцентом на стабилизацию корпуса, руки на верху руля.`,
     stretch: `После велосипеда: растяжка ног, спины, плеч. 10-15 мин.`,
-    swim_brick: `Плавание + велосипед (комбинированная тренировка).`,
-    bike_run_brick: `Вело: 40-60мин зона 3. Переход: бег 10-20мин зона 2-3 для адаптации ног.`,
+    swim_brick: `🔗 КОМБИНИРОВАННАЯ ТРЕНИРОВКА (Плавание → Вело)
+
+Плавание: 800-1200м (техника + темп)
+⚡ ПЕРЕХОД: раздевание, надевание велоодежды за 3-5 мин
+Велосипед: 30-45мин в зоне 2-3
+
+Цель: адаптация к переходу из воды на велосипед, отработка T1 (transition 1).`,
+    bike_run_brick: `🔗 КОМБИНИРОВАННАЯ ТРЕНИРОВКА (Вело → Бег)
+
+Велосипед: 40-60мин зона 3
+⚡ ПЕРЕХОД: смена обуви за 1-2 мин
+Бег: 10-20мин зона 2-3
+
+Цель: адаптация ног к бегу после велосипеда.`,
   };
 
   return {
@@ -381,12 +400,12 @@ function generateRunSession(day: number, intensity: Intensity, type: SessionType
     long: `Длительный бег: ${Math.round(duration / 60 * 10)}км в аэробной зоне`,
     recovery: `Восстановительный бег: очень лёгкий темп, разговорный`,
     technique: `Технический бег: drills, ускорения, работа над каденсом`,
-    brick: `Бег после велосипеда: адаптация ног к беговому шагу`,
+    brick: `🔗 БРИК: Бег после велосипеда (${duration}мин)`,
     strength: `Силовой бег: работа в горку или с сопротивлением`,
     core: `Укрепление кора: беговые упражнения на стабилизацию`,
     stretch: `Растяжка после бега: 10-15 мин`,
-    swim_brick: `Брик: плавание + бег`,
-    bike_run_brick: `Брик: велосипед + бег`,
+    swim_brick: `🔗 БРИК: Плавание → Бег`,
+    bike_run_brick: `🔗 БРИК: Велосипед → Бег`,
   };
 
   const details: Record<SessionType, string> = {
@@ -395,12 +414,31 @@ function generateRunSession(day: number, intensity: Intensity, type: SessionType
     long: `Разминка 5мин. Основная: ровный бег зона 2, питание каждые 30мин. Заминка 5мин.`,
     recovery: `Лёгкий бег 30-40мин, зона 1. Каденс 170-180 шагов/мин.`,
     technique: `Разминка 10мин. A-скок, B-скок, захлёст. 6x100м ускорения. Заминка 10мин.`,
-    brick: `После велосипеда: бег 15-20мин. Фокус на быстрый переход на беговой шаг. Зона 2-3.`,
+    brick: `🔗 КОМБИНИРОВАННАЯ ТРЕНИРОВКА (Бег после Вело)
+
+⚡ ПЕРЕХОД T2: смена обуви за 1-2 мин
+Бег: ${duration}мин в зоне 2-3
+
+Цель: адаптация ног к беговому шагу после велосипеда.
+Ноги будут "ватными" и тяжёлыми — это нормально!
+Фокус на высоком каденсе (170-180 шагов/мин) и коротком шаге.`,
     strength: `Разминка 10мин. Основная: 8x30сек в горку (уклон 5-8%), ходьба вниз. Заминка 10мин.`,
     core: `Во время бега: 3x5мин с акцентом на стабилизацию корпуса, высокий каденс.`,
     stretch: `После бега: растяжка ног, спины, плеч. 10-15 мин.`,
-    swim_brick: `Плавание + бег (комбинированная тренировка).`,
-    bike_run_brick: `Вело: 40-60мин зона 3. Переход: бег 10-20мин зона 2-3 для адаптации ног.`,
+    swim_brick: `🔗 КОМБИНИРОВАННАЯ ТРЕНИРОВКА (Плавание → Бег)
+
+Плавание: 800-1200м (техника + темп)
+⚡ ПЕРЕХОД T1+T2: раздевание, смена обуви за 3-5 мин
+Бег: 10-15мин в зоне 2
+
+Цель: адаптация к двойному переходу (вода → бег).`,
+    bike_run_brick: `🔗 КОМБИНИРОВАННАЯ ТРЕНИРОВКА (Вело → Бег)
+
+Велосипед: 40-60мин зона 3
+⚡ ПЕРЕХОД T2: смена обуви за 1-2 мин
+Бег: 10-20мин зона 2-3
+
+Цель: адаптация ног к бегу после велосипеда.`,
   };
 
   return {
@@ -509,21 +547,65 @@ export function generateWeekPlan(
     addOccupied(runDays[3]);
   }
 
-  // === BRICK session for advanced athletes ===
-  if (profile.level === 'advanced' && days >= 5) {
-    // Find a day where both bike and run are allowed
+  // === BRICK sessions (комбинированные тренировки) ===
+  // Частота зависит от уровня подготовки:
+  // - beginner: 1 bike-run брик каждые 2 недели
+  // - intermediate: 1 bike-run брик в неделю + 1 swim-to-bike каждые 2 недели
+  // - advanced: 2 брика в неделю (bike-run + swim-to-bike)
+  
+  const addBikeRunBrick = () => {
+    // Ищем день, где разрешены и бег, и велосипед
     const brickCandidates: number[] = [];
     for (let d = 0; d < 7; d++) {
       if (isSportAllowed('run', d, profile) && isSportAllowed('bike', d, profile)) {
         brickCandidates.push(d);
       }
     }
-    // Prefer days that already have a bike session (to combine)
+    // Предпочитаем дни, где уже есть велосипедная тренировка
     const brickDay = brickCandidates.find(d => sessions.some(s => s.day === d && s.sport === 'bike'))
       ?? brickCandidates[0];
     if (brickDay !== undefined) {
-      sessions.push(generateRunSession(brickDay, 'moderate', 'brick', Math.round(runDuration * 0.8), weekNumber, profile));
+      const brickDuration = profile.level === 'beginner' ? 20 : profile.level === 'intermediate' ? 30 : 40;
+      sessions.push(generateRunSession(brickDay, 'moderate', 'brick', brickDuration, weekNumber, profile));
+      addOccupied(brickDay);
     }
+  };
+
+  const addSwimToBikeBrick = () => {
+    // Ищем день, где разрешены и плавание, и велосипед
+    const brickCandidates: number[] = [];
+    for (let d = 0; d < 7; d++) {
+      if (isSportAllowed('swim', d, profile) && isSportAllowed('bike', d, profile)) {
+        brickCandidates.push(d);
+      }
+    }
+    // Предпочитаем дни, где уже есть плавание
+    const brickDay = brickCandidates.find(d => sessions.some(s => s.day === d && s.sport === 'swim'))
+      ?? brickCandidates[0];
+    if (brickDay !== undefined) {
+      const brickDuration = profile.level === 'beginner' ? 30 : 45;
+      sessions.push(generateBikeSession(brickDay, 'easy', 'brick', brickDuration, weekNumber, profile));
+      addOccupied(brickDay);
+    }
+  };
+
+  // Генерируем брики в зависимости от уровня
+  if (profile.level === 'beginner') {
+    // 1 bike-run брик каждые 2 недели
+    if (weekNumber % 2 === 0) {
+      addBikeRunBrick();
+    }
+  } else if (profile.level === 'intermediate') {
+    // 1 bike-run брик каждую неделю
+    addBikeRunBrick();
+    // 1 swim-to-bike брик каждые 2 недели
+    if (weekNumber % 2 === 0) {
+      addSwimToBikeBrick();
+    }
+  } else if (profile.level === 'advanced') {
+    // 2 брика в неделю
+    addBikeRunBrick();
+    addSwimToBikeBrick();
   }
 
   // === STRENGTH training (2x per week) ===

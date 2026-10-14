@@ -25,6 +25,7 @@ const SESSION_TYPE_CONFIG: Record<string, { icon: string; color: string; bg: str
   strength: { icon: '💪', color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200', name: 'Силовая' },
   core: { icon: '🎯', color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-200', name: 'Кор' },
   stretch: { icon: '🧘', color: 'text-pink-600', bg: 'bg-pink-50 border-pink-200', name: 'Растяжка' },
+  brick: { icon: '🔗', color: 'text-orange-600', bg: 'bg-orange-50 border-orange-300', name: 'Брик' },
 };
 
 const INTENSITY_COLORS: Record<string, string> = {
@@ -38,19 +39,27 @@ const SessionCard: React.FC<{ session: TrainingSession }> = ({ session }) => {
   const [expanded, setExpanded] = useState(false);
   
   // Определяем конфигурацию на основе типа сессии
-  const isSpecialSession = ['strength', 'core', 'stretch'].includes(session.type);
+  const isSpecialSession = ['strength', 'core', 'stretch', 'brick'].includes(session.type);
   const config = isSpecialSession ? SESSION_TYPE_CONFIG[session.type] : SPORT_CONFIG[session.sport];
+  
+  // Для бриков определяем комбинацию видов спорта
+  const isBrick = session.type === 'brick';
+  const brickCombo = isBrick 
+    ? (session.sport === 'run' ? '🚴→🏃 Вело+Бег' : '🏊→🚴 Плавание+Вело')
+    : '';
 
   return (
     <div
-      className={`rounded-xl border-2 p-3 cursor-pointer transition-all hover:shadow-md ${config.bg}`}
+      className={`rounded-xl border-2 p-3 cursor-pointer transition-all hover:shadow-md ${config.bg} ${isBrick ? 'border-dashed' : ''}`}
       onClick={() => setExpanded(!expanded)}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-lg">{config.icon}</span>
           <div>
-            <div className={`font-medium text-sm ${config.color}`}>{config.name}</div>
+            <div className={`font-medium text-sm ${config.color}`}>
+              {isBrick ? brickCombo : config.name}
+            </div>
             <div className="text-xs text-gray-500">{session.duration} мин</div>
           </div>
         </div>
@@ -249,6 +258,10 @@ export const WeekPlanView: React.FC<Props> = ({ plan, weekNumber, totalWeeks, on
         <div className="flex items-center gap-1">
           <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
           <span>Высокая</span>
+        </div>
+        <div className="flex items-center gap-1 ml-4 pl-4 border-l border-gray-300">
+          <span className="text-orange-500">🔗</span>
+          <span>Брик (комбинированная)</span>
         </div>
       </div>
     </div>
