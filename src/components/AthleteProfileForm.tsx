@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AthleteProfile, Level, Sport, LEVEL_INFO } from '../types';
+import { HealthRecommendations } from './HealthRecommendations';
 
 interface Props {
   profile: AthleteProfile;
@@ -91,12 +92,27 @@ export const AthleteProfileForm: React.FC<Props> = ({ profile, onChange }) => {
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
       <div className="p-6 pb-0">
-        <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-            <i className="fas fa-user text-sm"></i>
-          </span>
-          Профиль спортсмена
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <span className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+              <i className="fas fa-user text-sm"></i>
+            </span>
+            Профиль спортсмена
+          </h2>
+          {(profile.healthRestrictions.injuries || profile.healthRestrictions.allergies) && (
+            <button
+              onClick={() => setActiveSection('health')}
+              className={`text-xs px-2.5 py-1.5 rounded-full font-medium flex items-center gap-1 ${
+                activeSection === 'health'
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-red-50 text-red-600 hover:bg-red-100'
+              }`}
+            >
+              <i className="fas fa-heart-pulse text-[10px]"></i>
+              Есть ограничения
+            </button>
+          )}
+        </div>
 
         {/* Section tabs */}
         <div className="flex gap-1 overflow-x-auto pb-2 -mx-2 px-2">
@@ -419,21 +435,21 @@ export const AthleteProfileForm: React.FC<Props> = ({ profile, onChange }) => {
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Травмы / ограничения</label>
               <textarea
-                value={profile.healthRestrictions.injuries.join(', ')}
-                onChange={(e) => onChange({ ...profile, healthRestrictions: { ...profile.healthRestrictions, injuries: e.target.value.split(',').map(s => s.trim()).filter(Boolean) } })}
+                value={profile.healthRestrictions.injuries}
+                onChange={(e) => onChange({ ...profile, healthRestrictions: { ...profile.healthRestrictions, injuries: e.target.value } })}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none resize-none"
                 rows={2}
-                placeholder="Например: боль в колене, проблема с плечом"
+                placeholder="Например: эндопротезирование тазобедренного сустава, боль в колене"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Аллергии</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Заболевания</label>
               <textarea
-                value={profile.healthRestrictions.allergies.join(', ')}
-                onChange={(e) => onChange({ ...profile, healthRestrictions: { ...profile.healthRestrictions, allergies: e.target.value.split(',').map(s => s.trim()).filter(Boolean) } })}
+                value={profile.healthRestrictions.allergies}
+                onChange={(e) => onChange({ ...profile, healthRestrictions: { ...profile.healthRestrictions, allergies: e.target.value } })}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none resize-none"
                 rows={2}
-                placeholder="Например: лактоза, глютен"
+                placeholder="Например: гипертония, астма, диабет"
               />
             </div>
             <div>
@@ -446,6 +462,17 @@ export const AthleteProfileForm: React.FC<Props> = ({ profile, onChange }) => {
                 placeholder="Любая дополнительная информация о здоровье..."
               />
             </div>
+
+            {/* Recommendations based on health data */}
+            {(profile.healthRestrictions.injuries || profile.healthRestrictions.allergies || profile.healthRestrictions.notes) && (
+              <div className="mt-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <i className="fas fa-lightbulb text-yellow-500"></i>
+                  Рекомендации по корректировке плана
+                </h3>
+                <HealthRecommendations profile={profile} />
+              </div>
+            )}
           </div>
         )}
       </div>

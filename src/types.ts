@@ -29,8 +29,8 @@ export interface DayPreferences {
 }
 
 export interface HealthRestrictions {
-  injuries: string[];
-  allergies: string[];
+  injuries: string;
+  allergies: string;
   notes: string;
 }
 

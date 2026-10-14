@@ -50,8 +50,8 @@ const defaultProfile: AthleteProfile = {
     6: [],                    // Вс - отдых
   },
   healthRestrictions: {
-    injuries: [],
-    allergies: [],
+    injuries: '',
+    allergies: '',
     notes: '',
   },
 };
@@ -299,6 +299,7 @@ function App() {
                     weekNumber={currentWeek}
                     totalWeeks={raceConfig.weeksToRace}
                     onWeekChange={setCurrentWeek}
+                    profile={profile}
                   />
                 )}
               </div>

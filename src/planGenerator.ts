@@ -1,4 +1,5 @@
 import { AthleteProfile, RaceConfig, TrainingSession, WeekPlan, Distance, Level, Sport, Intensity, SessionType, TrainingLogEntry, FitnessMetrics } from './types';
+import { getPlanAdjustments } from './healthAnalyzer';
 
 function getPhase(weekNumber: number, totalWeeks: number): string {
   const progress = weekNumber / totalWeeks;
@@ -259,12 +260,15 @@ export function generateWeekPlan(
   const levelMultiplier = getLevelMultiplier(profile.level);
   const baseHours = getDistanceBaseHours(raceConfig.distance);
 
+  // Получаем корректировки на основе здоровья
+  const healthAdj = getPlanAdjustments(profile);
+
   const totalBaseHours = baseHours.swim + baseHours.bike + baseHours.run;
   const hourRatio = profile.weeklyHours / totalBaseHours;
 
-  const swimHours = baseHours.swim * hourRatio * phaseMultiplier * levelMultiplier;
-  const bikeHours = baseHours.bike * hourRatio * phaseMultiplier * levelMultiplier;
-  const runHours = baseHours.run * hourRatio * phaseMultiplier * levelMultiplier;
+  const swimHours = baseHours.swim * hourRatio * phaseMultiplier * levelMultiplier * healthAdj.swimMultiplier;
+  const bikeHours = baseHours.bike * hourRatio * phaseMultiplier * levelMultiplier * healthAdj.bikeMultiplier;
+  const runHours = baseHours.run * hourRatio * phaseMultiplier * levelMultiplier * healthAdj.runMultiplier;
 
   const sessions: TrainingSession[] = [];
   const days = profile.trainingDays;
@@ -349,6 +353,18 @@ export function generateWeekPlan(
       sessions.push(generateRunSession(brickDay, 'moderate', 'brick', Math.round(runDuration * 0.8), weekNumber, profile));
     }
   }
+
+  // === Ограничение интенсивности на основе здоровья ===
+  const intensityOrder: Intensity[] = ['recovery', 'easy', 'moderate', 'hard'];
+  const maxIdx = intensityOrder.indexOf(healthAdj.maxIntensity);
+  sessions.forEach(session => {
+    const sessionIdx = intensityOrder.indexOf(session.intensity);
+    if (sessionIdx > maxIdx) {
+      session.intensity = healthAdj.maxIntensity;
+      session.targetHR = getTargetHR(healthAdj.maxIntensity, profile);
+      session.targetPace = getTargetPace(session.sport, healthAdj.maxIntensity, profile);
+    }
+  });
 
   // Sort by day
   sessions.sort((a, b) => a.day - b.day);

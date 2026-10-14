@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { WeekPlan, TrainingSession, Sport } from '../types';
+import { WeekPlan, TrainingSession, Sport, AthleteProfile } from '../types';
+import { analyzeHealthRestrictions } from '../healthAnalyzer';
 
 interface Props {
   plan: WeekPlan;
   weekNumber: number;
   totalWeeks: number;
   onWeekChange: (week: number) => void;
+  profile: AthleteProfile;
 }
 
 const DAY_NAMES = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -62,12 +64,15 @@ const SessionCard: React.FC<{ session: TrainingSession }> = ({ session }) => {
   );
 };
 
-export const WeekPlanView: React.FC<Props> = ({ plan, weekNumber, totalWeeks, onWeekChange }) => {
+export const WeekPlanView: React.FC<Props> = ({ plan, weekNumber, totalWeeks, onWeekChange, profile }) => {
   const sessionsByDay: Record<number, TrainingSession[]> = {};
   plan.sessions.forEach((s) => {
     if (!sessionsByDay[s.day]) sessionsByDay[s.day] = [];
     sessionsByDay[s.day].push(s);
   });
+
+  const healthRecs = analyzeHealthRestrictions(profile);
+  const hasHealthRestrictions = healthRecs.length > 0;
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
@@ -133,6 +138,26 @@ export const WeekPlanView: React.FC<Props> = ({ plan, weekNumber, totalWeeks, on
         <span className="text-sm text-gray-600">Общий объём:</span>
         <span className="font-bold text-gray-800">{plan.totalHours} часов</span>
       </div>
+
+      {/* Health adjustments banner */}
+      {hasHealthRestrictions && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+          <div className="flex items-start gap-2">
+            <span className="text-lg shrink-0">⚕️</span>
+            <div>
+              <div className="font-medium text-sm text-amber-800 mb-1">План скорректирован с учётом ваших ограничений</div>
+              <div className="text-xs text-amber-700 space-y-1">
+                {healthRecs.slice(0, 2).map((rec, idx) => (
+                  <div key={idx}>• {rec.title.replace(/[⚠️ℹ️🚨]/g, '').trim()}: {rec.adjustments[0]}</div>
+                ))}
+                {healthRecs.length > 2 && (
+                  <div className="text-amber-500">... и ещё {healthRecs.length - 2} рекомендаций. Подробнее в Профиле → Здоровье</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Week grid */}
       <div className="grid grid-cols-1 sm:grid-cols-7 gap-2">
