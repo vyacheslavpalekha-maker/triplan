@@ -274,30 +274,74 @@ export const AthleteProfileForm: React.FC<Props> = ({ profile, onChange }) => {
         {/* Day preferences */}
         {activeSection === 'schedule' && (
           <div className="space-y-3">
-            <p className="text-xs text-gray-500 mb-2">
-              Укажите, какие виды спорта предпочтительны для каждого дня недели
-            </p>
-            {DAY_NAMES.map((dayName, dayIndex) => (
-              <div key={dayIndex} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
-                <span className="text-sm font-medium text-gray-700 w-28">{dayName}</span>
-                <div className="flex gap-2 flex-wrap">
-                  {(['swim', 'bike', 'run'] as Sport[]).map(sport => (
-                    <label key={sport} className="flex items-center gap-1 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={(profile.dayPreferences[dayIndex] || []).includes(sport)}
-                        onChange={(e) => updateDayPref(dayIndex, sport, e.target.checked)}
-                        className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-                      />
-                      <span className="text-xs text-gray-600">{SPORT_LABELS[sport]}</span>
-                    </label>
-                  ))}
+            <div className="bg-blue-50 rounded-xl p-3 mb-2">
+              <p className="text-xs text-blue-700">
+                <i className="fas fa-info-circle mr-1"></i>
+                Отметьте галочками, какие виды спорта вы хотите делать в каждый день.
+                Пустые дни = план распределит автоматически. План учтёт ваши предпочтения при расстановке тренировок.
+              </p>
+            </div>
+            {DAY_NAMES.map((dayName, dayIndex) => {
+              const prefs = profile.dayPreferences[dayIndex] || [];
+              const isWeekend = dayIndex >= 5;
+              return (
+                <div key={dayIndex} className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${
+                  prefs.length > 0 ? 'border-blue-200 bg-blue-50/50' : 'border-gray-100 bg-gray-50'
+                }`}>
+                  <div className="w-24 shrink-0">
+                    <span className="text-sm font-medium text-gray-700">{dayName}</span>
+                    {isWeekend && <span className="text-[10px] text-orange-400 ml-1">вых</span>}
+                  </div>
+                  <div className="flex gap-2 flex-wrap flex-1">
+                    {(['swim', 'bike', 'run'] as Sport[]).map(sport => {
+                      const checked = prefs.includes(sport);
+                      return (
+                        <label key={sport} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg cursor-pointer transition-all border ${
+                          checked
+                            ? sport === 'swim' ? 'bg-blue-100 border-blue-300 text-blue-700'
+                              : sport === 'bike' ? 'bg-green-100 border-green-300 text-green-700'
+                              : 'bg-red-100 border-red-300 text-red-700'
+                            : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => updateDayPref(dayIndex, sport, e.target.checked)}
+                            className="sr-only"
+                          />
+                          <span className="text-xs">{SPORT_LABELS[sport]}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {prefs.length === 0 && (
+                    <span className="text-[10px] text-gray-300 shrink-0">авто</span>
+                  )}
                 </div>
+              );
+            })}
+
+            {/* Summary */}
+            <div className="mt-3 p-3 bg-gray-50 rounded-xl">
+              <div className="text-xs font-medium text-gray-500 mb-2">Распределение по дням:</div>
+              <div className="flex gap-3 text-xs">
+                <span className="text-blue-600">
+                  🏊 {[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('swim')).length > 0
+                    ? `${[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('swim')).length} дн.`
+                    : 'авто'}
+                </span>
+                <span className="text-green-600">
+                  🚴 {[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('bike')).length > 0
+                    ? `${[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('bike')).length} дн.`
+                    : 'авто'}
+                </span>
+                <span className="text-red-600">
+                  🏃 {[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('run')).length > 0
+                    ? `${[0,1,2,3,4,5,6].filter(d => (profile.dayPreferences[d] || []).includes('run')).length} дн.`
+                    : 'авто'}
+                </span>
               </div>
-            ))}
-            <p className="text-xs text-gray-400 italic">
-              Если ничего не выбрано — план распределит тренировки автоматически
-            </p>
+            </div>
           </div>
         )}
 

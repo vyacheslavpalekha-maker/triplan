@@ -136,21 +136,32 @@ export const WeekPlanView: React.FC<Props> = ({ plan, weekNumber, totalWeeks, on
 
       {/* Week grid */}
       <div className="grid grid-cols-1 sm:grid-cols-7 gap-2">
-        {DAY_NAMES.map((dayName, dayIndex) => (
-          <div key={dayIndex} className="min-h-[120px]">
-            <div className="text-xs font-semibold text-gray-400 mb-2 text-center uppercase">{dayName}</div>
-            <div className="space-y-2">
-              {(sessionsByDay[dayIndex] || []).map((session) => (
-                <SessionCard key={session.id} session={session} />
-              ))}
-              {(!sessionsByDay[dayIndex] || sessionsByDay[dayIndex].length === 0) && (
-                <div className="rounded-xl border-2 border-dashed border-gray-100 p-3 text-center">
-                  <span className="text-xs text-gray-300">Отдых</span>
-                </div>
-              )}
+        {DAY_NAMES.map((dayName, dayIndex) => {
+          const daySessions = sessionsByDay[dayIndex] || [];
+          const hasMultiple = daySessions.length > 1;
+          return (
+            <div key={dayIndex} className={`min-h-[120px] ${hasMultiple ? 'bg-indigo-50/50 rounded-xl p-1.5 -m-1.5' : ''}`}>
+              <div className="flex items-center justify-center gap-1 mb-2">
+                <span className="text-xs font-semibold text-gray-400 uppercase">{dayName}</span>
+                {hasMultiple && (
+                  <span className="text-[9px] bg-indigo-200 text-indigo-700 px-1.5 py-0.5 rounded-full font-medium">
+                    x{daySessions.length}
+                  </span>
+                )}
+              </div>
+              <div className="space-y-2">
+                {daySessions.map((session) => (
+                  <SessionCard key={session.id} session={session} />
+                ))}
+                {daySessions.length === 0 && (
+                  <div className="rounded-xl border-2 border-dashed border-gray-100 p-3 text-center">
+                    <span className="text-xs text-gray-300">Отдых</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Intensity legend */}

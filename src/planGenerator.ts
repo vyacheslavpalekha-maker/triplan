@@ -76,10 +76,88 @@ function getTargetPace(sport: Sport, intensity: Intensity, profile: AthleteProfi
   return '';
 }
 
-function getAssignedDay(sport: Sport, dayIndex: number, profile: AthleteProfile): boolean {
+function isSportAllowed(sport: Sport, dayIndex: number, profile: AthleteProfile): boolean {
   const prefs = profile.dayPreferences[dayIndex];
-  if (!prefs || prefs.length === 0) return true; // no preference = any sport ok
+  // Если предпочтения не заданы или пустые — любой спорт разрешён
+  if (!prefs || prefs.length === 0) return true;
   return prefs.includes(sport);
+}
+
+/**
+ * Находит дни для размещения тренировок данного вида спорта.
+ * Приоритет:
+ * 1. Дни, где пользователь явно указал этот спорт
+ * 2. Дни без ограничений (пустые предпочтения)
+ * 3. Оставшиеся дни (если совсем не хватает)
+ */
+function findDaysForSport(
+  sport: Sport,
+  neededCount: number,
+  profile: AthleteProfile,
+  occupiedDays: Map<number, number> // day -> count of sessions already placed
+): number[] {
+  const MAX_PER_DAY = 2; // не более 2 тренировок в день
+
+  // Приоритет 1: дни, где пользователь явно хочет этот спорт
+  const explicitDays: number[] = [];
+  for (let d = 0; d < 7; d++) {
+    const prefs = profile.dayPreferences[d];
+    if (prefs && prefs.length > 0 && prefs.includes(sport)) {
+      explicitDays.push(d);
+    }
+  }
+
+  // Приоритет 2: дни без ограничений
+  const neutralDays: number[] = [];
+  for (let d = 0; d < 7; d++) {
+    if (explicitDays.includes(d)) continue;
+    const prefs = profile.dayPreferences[d];
+    if (!prefs || prefs.length === 0) {
+      neutralDays.push(d);
+    }
+  }
+
+  // Приоритет 3: все остальные дни (где спорт не запрещён явно)
+  const fallbackDays: number[] = [];
+  for (let d = 0; d < 7; d++) {
+    if (explicitDays.includes(d) || neutralDays.includes(d)) continue;
+    if (isSportAllowed(sport, d, profile)) {
+      fallbackDays.push(d);
+    }
+  }
+
+  // Собираем кандидатов в порядке приоритета
+  const candidates = [...explicitDays, ...neutralDays, ...fallbackDays];
+
+  // Фильтруем по загруженности дня
+  const available = candidates.filter(d => (occupiedDays.get(d) || 0) < MAX_PER_DAY);
+
+  // Берём нужное количество, равномерно распределяя
+  if (available.length >= neededCount) {
+    // Равномерно размазываем по неделе
+    return distributeEvenly(available, neededCount);
+  }
+
+  // Если не хватает — берём все доступные
+  return available;
+}
+
+/**
+ * Равномерно распределяет N тренировок по доступным дням.
+ * Выбирает дни, максимально удалённые друг от друга.
+ */
+function distributeEvenly(days: number[], count: number): number[] {
+  if (count >= days.length) return days;
+  if (count <= 0) return [];
+  if (count === 1) return [days[Math.floor(days.length / 2)]];
+
+  const step = days.length / count;
+  const result: number[] = [];
+  for (let i = 0; i < count; i++) {
+    const index = Math.round(i * step);
+    result.push(days[Math.min(index, days.length - 1)]);
+  }
+  return result;
 }
 
 function calculateTSS(duration: number, intensity: Intensity): number {
@@ -214,37 +292,82 @@ export function generateWeekPlan(
   const sessions: TrainingSession[] = [];
   const days = profile.trainingDays;
 
-  // Swimming: 2-3 sessions per week — respect day preferences
+  // Track how many sessions are placed on each day (to avoid overloading)
+  const occupiedDays = new Map<number, number>();
+  const addOccupied = (day: number) => {
+    occupiedDays.set(day, (occupiedDays.get(day) || 0) + 1);
+  };
+
+  // === SWIMMING: 2-3 sessions per week ===
   const swimSessions = days >= 5 ? 3 : 2;
   const swimDuration = Math.round((swimHours * 60) / swimSessions);
+  const swimDays = findDaysForSport('swim', swimSessions, profile, occupiedDays);
 
-  const swimDays = [0, 2, 4].filter(d => getAssignedDay('swim', d, profile));
-  if (swimDays.length >= 1) sessions.push(generateSwimSession(swimDays[0], 'moderate', 'interval', swimDuration, weekNumber, profile));
-  if (swimDays.length >= 2) sessions.push(generateSwimSession(swimDays[1], 'easy', 'technique', Math.round(swimDuration * 0.8), weekNumber, profile));
-  if (swimDays.length >= 3) sessions.push(generateSwimSession(swimDays[2], 'moderate', 'long', Math.round(swimDuration * 1.2), weekNumber, profile));
+  if (swimDays.length >= 1) {
+    sessions.push(generateSwimSession(swimDays[0], 'moderate', 'interval', swimDuration, weekNumber, profile));
+    addOccupied(swimDays[0]);
+  }
+  if (swimDays.length >= 2) {
+    sessions.push(generateSwimSession(swimDays[1], 'easy', 'technique', Math.round(swimDuration * 0.8), weekNumber, profile));
+    addOccupied(swimDays[1]);
+  }
+  if (swimDays.length >= 3) {
+    sessions.push(generateSwimSession(swimDays[2], 'moderate', 'long', Math.round(swimDuration * 1.2), weekNumber, profile));
+    addOccupied(swimDays[2]);
+  }
 
-  // Cycling: 2-3 sessions per week
+  // === CYCLING: 2-3 sessions per week ===
   const bikeSessions = days >= 5 ? 3 : 2;
   const bikeDuration = Math.round((bikeHours * 60) / bikeSessions);
+  const bikeDays = findDaysForSport('bike', bikeSessions, profile, occupiedDays);
 
-  const bikeDays = [1, 3, 5].filter(d => getAssignedDay('bike', d, profile));
-  if (bikeDays.length >= 1) sessions.push(generateBikeSession(bikeDays[0], 'hard', 'interval', bikeDuration, weekNumber, profile));
-  if (bikeDays.length >= 2) sessions.push(generateBikeSession(bikeDays[1], 'easy', 'long', Math.round(bikeDuration * 1.5), weekNumber, profile));
-  if (bikeDays.length >= 3) sessions.push(generateBikeSession(bikeDays[2], 'moderate', 'brick', Math.round(bikeDuration * 0.8), weekNumber, profile));
+  if (bikeDays.length >= 1) {
+    sessions.push(generateBikeSession(bikeDays[0], 'hard', 'interval', bikeDuration, weekNumber, profile));
+    addOccupied(bikeDays[0]);
+  }
+  if (bikeDays.length >= 2) {
+    sessions.push(generateBikeSession(bikeDays[1], 'easy', 'long', Math.round(bikeDuration * 1.5), weekNumber, profile));
+    addOccupied(bikeDays[1]);
+  }
+  if (bikeDays.length >= 3) {
+    sessions.push(generateBikeSession(bikeDays[2], 'moderate', 'brick', Math.round(bikeDuration * 0.8), weekNumber, profile));
+    addOccupied(bikeDays[2]);
+  }
 
-  // Running: 3-4 sessions per week
+  // === RUNNING: 3-4 sessions per week ===
   const runSessions = days >= 6 ? 4 : 3;
   const runDuration = Math.round((runHours * 60) / runSessions);
+  const runDays = findDaysForSport('run', runSessions, profile, occupiedDays);
 
-  const runDays = [0, 2, 4, 6].filter(d => getAssignedDay('run', d, profile));
-  if (runDays.length >= 1) sessions.push(generateRunSession(runDays[0], 'hard', 'interval', runDuration, weekNumber, profile));
-  if (runDays.length >= 2) sessions.push(generateRunSession(runDays[1], 'easy', 'recovery', Math.round(runDuration * 0.7), weekNumber, profile));
-  if (runDays.length >= 3) sessions.push(generateRunSession(runDays[2], 'moderate', 'tempo', Math.round(runDuration * 1.1), weekNumber, profile));
-  if (runDays.length >= 4) sessions.push(generateRunSession(runDays[3], 'easy', 'long', Math.round(runDuration * 1.8), weekNumber, profile));
+  if (runDays.length >= 1) {
+    sessions.push(generateRunSession(runDays[0], 'hard', 'interval', runDuration, weekNumber, profile));
+    addOccupied(runDays[0]);
+  }
+  if (runDays.length >= 2) {
+    sessions.push(generateRunSession(runDays[1], 'easy', 'recovery', Math.round(runDuration * 0.7), weekNumber, profile));
+    addOccupied(runDays[1]);
+  }
+  if (runDays.length >= 3) {
+    sessions.push(generateRunSession(runDays[2], 'moderate', 'tempo', Math.round(runDuration * 1.1), weekNumber, profile));
+    addOccupied(runDays[2]);
+  }
+  if (runDays.length >= 4) {
+    sessions.push(generateRunSession(runDays[3], 'easy', 'long', Math.round(runDuration * 1.8), weekNumber, profile));
+    addOccupied(runDays[3]);
+  }
 
-  // Add brick session if advanced
+  // === BRICK session for advanced athletes ===
   if (profile.level === 'advanced' && days >= 5) {
-    const brickDay = [3, 5].find(d => getAssignedDay('run', d, profile) && getAssignedDay('bike', d, profile));
+    // Find a day where both bike and run are allowed
+    const brickCandidates: number[] = [];
+    for (let d = 0; d < 7; d++) {
+      if (isSportAllowed('run', d, profile) && isSportAllowed('bike', d, profile)) {
+        brickCandidates.push(d);
+      }
+    }
+    // Prefer days that already have a bike session (to combine)
+    const brickDay = brickCandidates.find(d => sessions.some(s => s.day === d && s.sport === 'bike'))
+      ?? brickCandidates[0];
     if (brickDay !== undefined) {
       sessions.push(generateRunSession(brickDay, 'moderate', 'brick', Math.round(runDuration * 0.8), weekNumber, profile));
     }
