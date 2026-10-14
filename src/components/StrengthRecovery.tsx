@@ -9,14 +9,14 @@ export const StrengthRecovery: React.FC<Props> = ({ profile }) => {
   return (
     <div className="space-y-6">
       {/* Силовая подготовка */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
+      <div className="garmin-card p-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(123, 44, 191, 0.1)', color: '#7B2CBF' }}>
             💪
           </span>
           Силовая подготовка
         </h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
           Силовые тренировки 2 раза в неделю помогают предотвратить травмы, улучшить экономичность движений и увеличить мощность.
         </p>
 
@@ -59,14 +59,14 @@ export const StrengthRecovery: React.FC<Props> = ({ profile }) => {
       </div>
 
       {/* Укрепление кора */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+      <div className="garmin-card p-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(58, 12, 163, 0.1)', color: '#3A0CA3' }}>
             🎯
           </span>
           Укрепление кора (2-3 раза в неделю)
         </h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
           Сильный кор — основа эффективного плавания, стабильной посадки на велосипеде и экономичного бега.
         </p>
 
@@ -87,14 +87,14 @@ export const StrengthRecovery: React.FC<Props> = ({ profile }) => {
       </div>
 
       {/* Растяжка и мобильность */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center text-pink-600">
+      <div className="garmin-card p-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(247, 37, 133, 0.1)', color: '#F72585' }}>
             🧘
           </span>
           Растяжка и мобильность
         </h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
           Регулярная растяжка улучшает диапазон движений, снижает риск травм и ускоряет восстановление.
         </p>
 
@@ -142,9 +142,9 @@ export const StrengthRecovery: React.FC<Props> = ({ profile }) => {
       </div>
 
       {/* Баня и массаж */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
+      <div className="garmin-card p-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(255, 152, 0, 0.1)', color: '#ff9800' }}>
             🧖
           </span>
           Восстановление: баня и массаж
@@ -187,9 +187,9 @@ export const StrengthRecovery: React.FC<Props> = ({ profile }) => {
       </div>
 
       {/* Дополнительные рекомендации */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center text-teal-600">
+      <div className="garmin-card p-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 150, 136, 0.1)', color: '#009688' }}>
             📋
           </span>
           Дополнительные рекомендации

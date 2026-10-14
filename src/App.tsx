@@ -10,6 +10,7 @@ import { TrainingJournal } from './components/TrainingJournal';
 import { Analytics } from './components/Analytics';
 import { NutritionRecovery } from './components/NutritionRecovery';
 import { StrengthRecovery } from './components/StrengthRecovery';
+import { ThemeProvider, useTheme } from './ThemeContext';
 
 const defaultProfile: AthleteProfile = {
   name: '',
@@ -43,13 +44,13 @@ const defaultProfile: AthleteProfile = {
     swim100m: 90,
   },
   dayPreferences: {
-    0: ['swim', 'run'],      // Пн - тренировка
-    1: ['bike'],              // Вт - тренировка
-    2: ['swim', 'run'],       // Ср - тренировка
-    3: ['bike', 'run'],       // Чт - тренировка
-    4: ['swim', 'run'],       // Пт - тренировка
-    5: [],                    // Сб - отдых
-    6: [],                    // Вс - отдых
+    0: ['swim', 'run'],
+    1: ['bike'],
+    2: ['swim', 'run'],
+    3: ['bike', 'run'],
+    4: ['swim', 'run'],
+    5: [],
+    6: [],
   },
   healthRestrictions: {
     injuries: '',
@@ -69,12 +70,12 @@ const defaultRaceConfig: RaceConfig = {
 };
 
 const defaultBadges: Badge[] = [
-  { id: 'first', name: 'Первый шаг', description: 'Первая тренировка в журнале', icon: '🎯', earned: false, requirement: '1 тренировка' },
-  { id: 'five', name: 'Пятёрка', description: '5 тренировок в журнале', icon: '⭐', earned: false, requirement: '5 тренировок' },
-  { id: 'ten', name: 'Десяточка', description: '10 тренировок в журнале', icon: '🔟', earned: false, requirement: '10 тренировок' },
-  { id: 'twentyfive', name: 'Четвертак', description: '25 тренировок в журнале', icon: '💪', earned: false, requirement: '25 тренировок' },
-  { id: 'streak3', name: 'Три дня', description: 'Серия 3 дня подряд', icon: '🔥', earned: false, requirement: '3 дня стрик' },
-  { id: 'streak7', name: 'Неделя огня', description: 'Серия 7 дней подряд', icon: '🔥', earned: false, requirement: '7 дней стрик' },
+  { id: 'first', name: 'Первый шаг', description: 'Первая тренировка', icon: '🎯', earned: false, requirement: '1 тренировка' },
+  { id: 'five', name: 'Пятёрка', description: '5 тренировок', icon: '⭐', earned: false, requirement: '5 тренировок' },
+  { id: 'ten', name: 'Десяточка', description: '10 тренировок', icon: '🔟', earned: false, requirement: '10 тренировок' },
+  { id: 'twentyfive', name: 'Четвертак', description: '25 тренировок', icon: '💪', earned: false, requirement: '25 тренировок' },
+  { id: 'streak3', name: 'Три дня', description: 'Серия 3 дня', icon: '🔥', earned: false, requirement: '3 дня стрик' },
+  { id: 'streak7', name: 'Неделя огня', description: 'Серия 7 дней', icon: '🔥', earned: false, requirement: '7 дней стрик' },
   { id: 'hours10', name: '10 часов', description: '10 часов тренировок', icon: '⏱', earned: false, requirement: '10 часов' },
   { id: 'hours50', name: 'Марафонец', description: '50 часов тренировок', icon: '🏅', earned: false, requirement: '50 часов' },
   { id: 'tss500', name: 'Нагрузочник', description: 'Суммарный TSS 500', icon: '📈', earned: false, requirement: 'TSS 500' },
@@ -90,7 +91,6 @@ function updateBadges(badges: Badge[], log: TrainingLogEntry[]): Badge[] {
   const swimCount = log.filter(e => e.sport === 'swim').length;
   const bikeCount = log.filter(e => e.sport === 'bike').length;
 
-  // Calculate streak
   let streak = 0;
   if (log.length > 0) {
     const sorted = [...log].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -128,7 +128,8 @@ function updateBadges(badges: Badge[], log: TrainingLogEntry[]): Badge[] {
   });
 }
 
-function App() {
+function AppContent() {
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [profile, setProfile] = useState<AthleteProfile>(defaultProfile);
   const [raceConfig, setRaceConfig] = useState<RaceConfig>(defaultRaceConfig);
@@ -170,68 +171,52 @@ function App() {
   const earnedCount = badges.filter(b => b.earned).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-secondary)' }}>
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
+      <header className="header sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white text-base">🏆</span>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--accent-primary)' }}>
+                <span className="text-white text-lg font-bold">T</span>
               </div>
               <div>
-                <h1 className="text-base font-bold text-gray-800">TriPlan</h1>
-                <p className="text-[10px] text-gray-400">Тренировочный план для триатлона</p>
+                <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>TriPlan</h1>
+                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Тренировочный план для триатлона</p>
               </div>
             </div>
 
-            {/* Tab navigation */}
-            <nav className="hidden md:flex items-center gap-1">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === tab.id
-                      ? 'bg-blue-500 text-white shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <i className={`fas ${tab.icon} text-xs`}></i>
-                  {tab.label}
-                  {tab.id === 'journal' && log.length > 0 && (
-                    <span className="ml-1 bg-white/20 text-[10px] px-1.5 py-0.5 rounded-full">{log.length}</span>
-                  )}
-                  {tab.id === 'analytics' && earnedCount > 0 && (
-                    <span className="ml-1 bg-yellow-400 text-yellow-900 text-[10px] px-1.5 py-0.5 rounded-full">{earnedCount}</span>
-                  )}
-                </button>
-              ))}
-            </nav>
+            <div className="flex items-center gap-2">
+              {/* Desktop tabs */}
+              <nav className="hidden md:flex items-center gap-1">
+                {tabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+                  >
+                    <i className={`fas ${tab.icon} mr-1.5`}></i>
+                    {tab.label}
+                  </button>
+                ))}
+              </nav>
 
-            {/* Mobile: badge count */}
-            <div className="md:hidden flex items-center gap-2">
-              {earnedCount > 0 && (
-                <span className="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full font-medium">
-                  🏅 {earnedCount}
-                </span>
-              )}
+              {/* Theme toggle */}
+              <button onClick={toggleTheme} className="theme-toggle" title={theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}>
+                <i className={`fas ${theme === 'light' ? 'fa-moon' : 'fa-sun'}`}></i>
+              </button>
             </div>
           </div>
 
           {/* Mobile tabs */}
-          <nav className="md:hidden flex items-center gap-1 mt-2 overflow-x-auto pb-1 -mx-1 px-1">
+          <nav className="md:hidden flex items-center gap-1 mt-3 overflow-x-auto pb-1">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-500 bg-gray-100'
-                }`}
+                className={`tab-btn whitespace-nowrap ${activeTab === tab.id ? 'active' : ''}`}
               >
-                <i className={`fas ${tab.icon} text-[10px]`}></i>
+                <i className={`fas ${tab.icon} mr-1`}></i>
                 {tab.label}
               </button>
             ))}
@@ -243,41 +228,38 @@ function App() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {activeTab === 'profile' && (
           <div className="space-y-6">
-            <div className="text-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-800 mb-1">Настройте свой профиль</h2>
-              <p className="text-gray-500 text-sm max-w-xl mx-auto">
-                Чем точнее данные — тем персонализированнее план
-              </p>
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Настройте свой профиль</h2>
+              <p style={{ color: 'var(--text-secondary)' }}>Чем точнее данные — тем персонализированнее план</p>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AthleteProfileForm profile={profile} onChange={setProfile} />
               <div className="space-y-6">
                 <RaceConfigForm raceConfig={raceConfig} onChange={setRaceConfig} profile={profile} />
-                {/* Quick summary */}
-                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-5 text-white shadow-xl">
-                  <h3 className="font-bold text-base mb-3">Параметры плана</h3>
+                <div className="garmin-card p-5">
+                  <h3 className="font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Параметры плана</h3>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white/10 rounded-xl p-3">
-                      <div className="text-xl font-bold">{raceConfig.weeksToRace}</div>
-                      <div className="text-[10px] text-white/70">недель</div>
+                    <div className="stat-card">
+                      <div className="stat-value">{raceConfig.weeksToRace}</div>
+                      <div className="stat-label">Недель</div>
                     </div>
-                    <div className="bg-white/10 rounded-xl p-3">
-                      <div className="text-xl font-bold">{profile.weeklyHours}ч</div>
-                      <div className="text-[10px] text-white/70">в неделю</div>
+                    <div className="stat-card">
+                      <div className="stat-value">{profile.weeklyHours}ч</div>
+                      <div className="stat-label">В неделю</div>
                     </div>
-                    <div className="bg-white/10 rounded-xl p-3">
-                      <div className="text-xl font-bold">{profile.trainingDays}</div>
-                      <div className="text-[10px] text-white/70">дней</div>
+                    <div className="stat-card">
+                      <div className="stat-value">{profile.trainingDays}</div>
+                      <div className="stat-label">Дней</div>
                     </div>
-                    <div className="bg-white/10 rounded-xl p-3">
-                      <div className="text-xl font-bold">{raceConfig.targetTime || '—'}</div>
-                      <div className="text-[10px] text-white/70">🎯 цель</div>
+                    <div className="stat-card">
+                      <div className="stat-value">{raceConfig.targetTime || '—'}</div>
+                      <div className="stat-label">🎯 Цель</div>
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={() => setActiveTab('plan')}
-                  className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg hover:scale-[1.02] transition-all"
+                  className="garmin-btn w-full"
                 >
                   Сформировать план <i className="fas fa-arrow-right ml-2"></i>
                 </button>
@@ -290,17 +272,17 @@ function App() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-800">
+                <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   План для {profile.name || 'спортсмена'}
                 </h2>
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>
                   Подготовка к дистанции «{
                     raceConfig.distance === 'sprint' ? 'Спринт' :
                     raceConfig.distance === 'olympic' ? 'Олимпийская' :
                     raceConfig.distance === 'half_iron' ? '70.3' : 'IRONMAN'
                   }» • Старт: {new Date(raceConfig.raceDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
                   {raceConfig.targetTime && (
-                    <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                    <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}>
                       🎯 {raceConfig.targetTime}
                     </span>
                   )}
@@ -334,8 +316,8 @@ function App() {
         {activeTab === 'journal' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Тренировочный журнал</h2>
-              <p className="text-gray-500 text-sm mt-1">Записывайте результаты и отслеживайте прогресс</p>
+              <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Тренировочный журнал</h2>
+              <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Записывайте результаты и отслеживайте прогресс</p>
             </div>
             <TrainingJournal
               log={log}
@@ -349,8 +331,8 @@ function App() {
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Аналитика и мотивация</h2>
-              <p className="text-gray-500 text-sm mt-1">Отслеживайте форму, усталость и достижения</p>
+              <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Аналитика и мотивация</h2>
+              <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Отслеживайте форму, усталость и достижения</p>
             </div>
             <Analytics
               log={log}
@@ -364,8 +346,8 @@ function App() {
         {activeTab === 'nutrition' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Питание и восстановление</h2>
-              <p className="text-gray-500 text-sm mt-1">Рекомендации по питанию и стратегии восстановления</p>
+              <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Питание и восстановление</h2>
+              <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Рекомендации по питанию и стратегии восстановления</p>
             </div>
             <NutritionRecovery profile={profile} raceConfig={raceConfig} />
           </div>
@@ -374,8 +356,8 @@ function App() {
         {activeTab === 'strength' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Силовая подготовка и восстановление</h2>
-              <p className="text-gray-500 text-sm mt-1">Укрепление мышц, кор, растяжка, баня и массаж</p>
+              <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Силовая подготовка и восстановление</h2>
+              <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Укрепление мышц, кор, растяжка, баня и массаж</p>
             </div>
             <StrengthRecovery profile={profile} />
           </div>
@@ -383,13 +365,21 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 mt-8 py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center text-xs text-gray-400">
+      <footer className="mt-8 py-4" style={{ borderTop: '1px solid var(--border-color)' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center text-xs" style={{ color: 'var(--text-tertiary)' }}>
           <p>TriPlan — Генератор тренировочных планов для триатлона</p>
           <p className="mt-1">План носит рекомендательный характер. Проконсультируйтесь с тренером.</p>
         </div>
       </footer>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 

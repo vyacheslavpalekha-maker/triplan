@@ -63,29 +63,29 @@ export const NutritionRecovery: React.FC<Props> = ({ profile, raceConfig }) => {
   return (
     <div className="space-y-6">
       {/* Daily macros */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+      <div className="garmin-card p-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 200, 83, 0.1)', color: '#00c853' }}>
             <i className="fas fa-utensils text-sm"></i>
           </span>
           Ежедневная норма КБЖУ
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-orange-50 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-orange-600">{macros.calories}</div>
-            <div className="text-xs text-orange-500">ккал/день</div>
+          <div className="stat-card">
+            <div className="stat-value" style={{ color: '#ff9800' }}>{macros.calories}</div>
+            <div className="stat-label">ккал/день</div>
           </div>
-          <div className="bg-red-50 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">{macros.protein}г</div>
-            <div className="text-xs text-red-500">Белки</div>
+          <div className="stat-card">
+            <div className="stat-value" style={{ color: '#f44336' }}>{macros.protein}г</div>
+            <div className="stat-label">Белки</div>
           </div>
-          <div className="bg-yellow-50 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-600">{macros.carbs}г</div>
-            <div className="text-xs text-yellow-500">Углеводы</div>
+          <div className="stat-card">
+            <div className="stat-value" style={{ color: '#ffd700' }}>{macros.carbs}г</div>
+            <div className="stat-label">Углеводы</div>
           </div>
-          <div className="bg-blue-50 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{macros.fat}г</div>
-            <div className="text-xs text-blue-500">Жиры</div>
+          <div className="stat-card">
+            <div className="stat-value" style={{ color: 'var(--accent-primary)' }}>{macros.fat}г</div>
+            <div className="stat-label">Жиры</div>
           </div>
         </div>
         <p className="text-xs text-gray-400 mt-3">
@@ -94,16 +94,16 @@ export const NutritionRecovery: React.FC<Props> = ({ profile, raceConfig }) => {
       </div>
 
       {/* Hydration */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center text-sky-600">
+      <div className="garmin-card p-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 164, 228, 0.1)', color: '#00a4e4' }}>
             <i className="fas fa-droplet text-sm"></i>
           </span>
           Гидратация
         </h3>
         <div className="flex items-center gap-4 mb-4">
-          <div className="text-3xl font-bold text-sky-600">{(hydration / 1000).toFixed(1)}л</div>
-          <div className="text-sm text-gray-500">ежедневная потребность в жидкости</div>
+          <div className="text-3xl font-bold" style={{ color: '#00a4e4' }}>{(hydration / 1000).toFixed(1)}л</div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>ежедневная потребность в жидкости</div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="bg-sky-50 rounded-lg p-3">
@@ -122,9 +122,9 @@ export const NutritionRecovery: React.FC<Props> = ({ profile, raceConfig }) => {
       </div>
 
       {/* Pre/During/Post workout */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
+      <div className="garmin-card p-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(123, 44, 191, 0.1)', color: '#7B2CBF' }}>
             <i className="fas fa-clock text-sm"></i>
           </span>
           Питание вокруг тренировки
@@ -162,9 +162,9 @@ export const NutritionRecovery: React.FC<Props> = ({ profile, raceConfig }) => {
       </div>
 
       {/* Race Day Plan */}
-      <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-100">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="w-8 h-8 bg-orange-200 rounded-full flex items-center justify-center text-orange-700">
+      <div className="rounded-2xl p-6" style={{ background: 'linear-gradient(135deg, rgba(255, 152, 0, 0.05), rgba(244, 67, 54, 0.05))', border: '1px solid rgba(255, 152, 0, 0.2)' }}>
+        <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(255, 152, 0, 0.2)', color: '#ff9800' }}>
             <i className="fas fa-flag-checkered text-sm"></i>
           </span>
           План питания на день гонки
@@ -190,9 +190,9 @@ export const NutritionRecovery: React.FC<Props> = ({ profile, raceConfig }) => {
       </div>
 
       {/* Recovery */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+      <div className="garmin-card p-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(58, 12, 163, 0.1)', color: '#3A0CA3' }}>
             <i className="fas fa-bed text-sm"></i>
           </span>
           Восстановление

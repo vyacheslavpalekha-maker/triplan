@@ -73,7 +73,7 @@ export const Analytics: React.FC<Props> = ({ log, badges, raceDate, goalRace }) 
   return (
     <div className="space-y-6">
       {/* Countdown + Quote */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-xl">
+      <div className="rounded-2xl p-6 text-white shadow-xl" style={{ background: 'linear-gradient(135deg, var(--accent-primary), #7B2CBF)' }}>
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-center md:text-left">
             <p className="text-sm text-white/70 mb-1">До гонки{goalRace ? ` «${goalRace}»` : ''}</p>
@@ -88,25 +88,25 @@ export const Analytics: React.FC<Props> = ({ log, badges, raceDate, goalRace }) 
 
       {/* Fitness metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="text-xs text-gray-400 mb-1">Форма (CTL)</div>
-          <div className="text-2xl font-bold text-green-600">{metrics.ctl}</div>
-          <div className="text-xs text-gray-400">Хроническая нагрузка</div>
+        <div className="stat-card">
+          <div className="text-xs mb-1" style={{ color: 'var(--text-tertiary)' }}>Форма (CTL)</div>
+          <div className="stat-value" style={{ color: '#00c853' }}>{metrics.ctl}</div>
+          <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Хроническая нагрузка</div>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="text-xs text-gray-400 mb-1">Усталость (ATL)</div>
-          <div className="text-2xl font-bold text-orange-600">{metrics.atl}</div>
-          <div className="text-xs text-gray-400">Острая нагрузка</div>
+        <div className="stat-card">
+          <div className="text-xs mb-1" style={{ color: 'var(--text-tertiary)' }}>Усталость (ATL)</div>
+          <div className="stat-value" style={{ color: '#ff9800' }}>{metrics.atl}</div>
+          <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Острая нагрузка</div>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="text-xs text-gray-400 mb-1">Баланс (TSB)</div>
+        <div className="stat-card">
+          <div className="text-xs mb-1" style={{ color: 'var(--text-tertiary)' }}>Баланс (TSB)</div>
           <div className={`text-2xl font-bold ${readinessColor}`}>{metrics.tsb > 0 ? '+' : ''}{metrics.tsb}</div>
-          <div className="text-xs text-gray-400">CTL − ATL</div>
+          <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>CTL − ATL</div>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="text-xs text-gray-400 mb-1">Ramp Rate</div>
-          <div className="text-2xl font-bold text-blue-600">{metrics.rampRate}</div>
-          <div className="text-xs text-gray-400">Рост CTL/нед</div>
+        <div className="stat-card">
+          <div className="text-xs mb-1" style={{ color: 'var(--text-tertiary)' }}>Ramp Rate</div>
+          <div className="stat-value" style={{ color: 'var(--accent-primary)' }}>{metrics.rampRate}</div>
+          <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Рост CTL/нед</div>
         </div>
       </div>
 
@@ -128,9 +128,9 @@ export const Analytics: React.FC<Props> = ({ log, badges, raceDate, goalRace }) 
       </div>
 
       {/* Weekly TSS chart */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <i className="fas fa-chart-bar text-indigo-500"></i>
+      <div className="garmin-card p-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <i className="fas fa-chart-bar" style={{ color: 'var(--accent-primary)' }}></i>
           Нагрузка по неделям (TSS)
         </h3>
         <div className="flex items-end gap-1 h-40">
@@ -153,16 +153,16 @@ export const Analytics: React.FC<Props> = ({ log, badges, raceDate, goalRace }) 
       </div>
 
       {/* Streak */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <i className="fas fa-fire text-orange-500"></i>
+      <div className="garmin-card p-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <i className="fas fa-fire" style={{ color: '#ff9800' }}></i>
           Серия тренировок
         </h3>
         <div className="flex items-center gap-4">
-          <div className="text-4xl font-bold text-orange-500">{streak}</div>
+          <div className="text-4xl font-bold" style={{ color: '#ff9800' }}>{streak}</div>
           <div>
-            <div className="text-sm text-gray-600">дней подряд</div>
-            <div className="text-xs text-gray-400">
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>дней подряд</div>
+            <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
               {streak === 0 ? 'Начните серию сегодня!' :
                streak < 3 ? 'Хорошее начало!' :
                streak < 7 ? 'Отличный ритм!' :
@@ -173,23 +173,23 @@ export const Analytics: React.FC<Props> = ({ log, badges, raceDate, goalRace }) 
       </div>
 
       {/* Badges */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <i className="fas fa-medal text-yellow-500"></i>
+      <div className="garmin-card p-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <i className="fas fa-medal" style={{ color: '#ffd700' }}></i>
           Достижения
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {badges.map(badge => (
-            <div key={badge.id} className={`p-3 rounded-xl text-center transition-all ${
-              badge.earned
-                ? 'bg-yellow-50 border-2 border-yellow-200 shadow-sm'
-                : 'bg-gray-50 border-2 border-gray-100 opacity-50'
-            }`}>
+            <div key={badge.id} className="p-3 rounded-xl text-center transition-all" style={{
+              backgroundColor: badge.earned ? 'rgba(255, 215, 0, 0.1)' : 'var(--bg-tertiary)',
+              border: `2px solid ${badge.earned ? '#ffd700' : 'var(--border-color)'}`,
+              opacity: badge.earned ? 1 : 0.5,
+            }}>
               <div className="text-2xl mb-1">{badge.icon}</div>
-              <div className="text-xs font-medium text-gray-700">{badge.name}</div>
-              <div className="text-[10px] text-gray-400 mt-1">{badge.description}</div>
+              <div className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{badge.name}</div>
+              <div className="text-[10px] mt-1" style={{ color: 'var(--text-tertiary)' }}>{badge.description}</div>
               {badge.earned && badge.earnedDate && (
-                <div className="text-[10px] text-yellow-600 mt-1">✓ {badge.earnedDate}</div>
+                <div className="text-[10px] mt-1" style={{ color: '#ffd700' }}>✓ {badge.earnedDate}</div>
               )}
             </div>
           ))}

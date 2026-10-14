@@ -65,28 +65,28 @@ export const TrainingJournal: React.FC<Props> = ({ log, sessions, onAddEntry, on
     <div className="space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="text-2xl font-bold text-purple-600">{log.length}</div>
-          <div className="text-xs text-gray-500">Тренировок</div>
+        <div className="stat-card">
+          <div className="stat-value" style={{ color: '#7B2CBF' }}>{log.length}</div>
+          <div className="stat-label">Тренировок</div>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="text-2xl font-bold text-blue-600">{totalHours.toFixed(1)}ч</div>
-          <div className="text-xs text-gray-500">Общее время</div>
+        <div className="stat-card">
+          <div className="stat-value" style={{ color: 'var(--accent-primary)' }}>{totalHours.toFixed(1)}ч</div>
+          <div className="stat-label">Общее время</div>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="text-2xl font-bold text-orange-600">{totalTSS}</div>
-          <div className="text-xs text-gray-500">Суммарный TSS</div>
+        <div className="stat-card">
+          <div className="stat-value" style={{ color: '#E85D04' }}>{totalTSS}</div>
+          <div className="stat-label">Суммарный TSS</div>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-          <div className="text-2xl font-bold text-red-600">{avgRPE}</div>
-          <div className="text-xs text-gray-500">Средний RPE</div>
+        <div className="stat-card">
+          <div className="stat-value" style={{ color: '#F72585' }}>{avgRPE}</div>
+          <div className="stat-label">Средний RPE</div>
         </div>
       </div>
 
       {/* Add button */}
       <button
         onClick={() => setShowForm(!showForm)}
-        className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+        className="garmin-btn w-full flex items-center justify-center gap-2"
       >
         <i className={`fas ${showForm ? 'fa-times' : 'fa-plus'}`}></i>
         {showForm ? 'Отмена' : 'Добавить тренировку'}
@@ -94,8 +94,8 @@ export const TrainingJournal: React.FC<Props> = ({ log, sessions, onAddEntry, on
 
       {/* Form */}
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-          <h3 className="font-bold text-gray-800 mb-4">Новая тренировка</h3>
+        <div className="garmin-card p-6">
+          <h3 className="font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Новая тренировка</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Дата</label>
@@ -204,7 +204,7 @@ export const TrainingJournal: React.FC<Props> = ({ log, sessions, onAddEntry, on
             </div>
           </div>
           <button onClick={handleSubmit}
-            className="mt-4 w-full py-3 bg-purple-500 text-white font-semibold rounded-xl hover:bg-purple-600 transition-all">
+            className="garmin-btn mt-4 w-full">
             Сохранить тренировку
           </button>
         </div>
@@ -213,36 +213,37 @@ export const TrainingJournal: React.FC<Props> = ({ log, sessions, onAddEntry, on
       {/* Log entries */}
       <div className="space-y-3">
         {log.length === 0 && (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12" style={{ color: 'var(--text-tertiary)' }}>
             <i className="fas fa-clipboard-list text-4xl mb-3"></i>
             <p>Журнал пуст. Добавьте первую тренировку!</p>
           </div>
         )}
         {[...log].reverse().map(entry => (
-          <div key={entry.id} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-all">
+          <div key={entry.id} className="garmin-card p-4 hover:shadow-md transition-all">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-lg">{SPORT_ICONS[entry.sport]}</span>
-                <span className="font-medium text-gray-800">{SPORT_NAMES[entry.sport]}</span>
-                <span className="text-xs text-gray-400">{entry.date}</span>
+                <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{SPORT_NAMES[entry.sport]}</span>
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{entry.date}</span>
               </div>
               <button onClick={() => onDeleteEntry(entry.id)}
-                className="text-gray-300 hover:text-red-400 transition-colors">
+                className="transition-colors"
+                style={{ color: 'var(--text-tertiary)' }}>
                 <i className="fas fa-trash-alt text-sm"></i>
               </button>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-              <div><span className="text-gray-400">Время:</span> <span className="font-medium">{entry.actualDuration} мин</span></div>
-              {entry.distance > 0 && <div><span className="text-gray-400">Дистанция:</span> <span className="font-medium">{entry.distance} {entry.sport === 'swim' ? 'м' : 'км'}</span></div>}
-              {entry.avgHR > 0 && <div><span className="text-gray-400">ЧСС:</span> <span className="font-medium">{entry.avgHR} уд/мин</span></div>}
-              {entry.avgPace && <div><span className="text-gray-400">{entry.sport === 'bike' ? 'Скорость:' : 'Темп:'}</span> <span className="font-medium">{entry.avgPace} {entry.sport === 'swim' ? 'мин/100м' : entry.sport === 'bike' ? 'км/ч' : 'мин/км'}</span></div>}
-              <div><span className="text-gray-400">RPE:</span> <span className="font-medium">{entry.rpe}/10</span></div>
-              <div><span className="text-gray-400">TSS:</span> <span className="font-medium">{entry.tss}</span></div>
-              <div><span className="text-gray-400">Настроение:</span> <span>{['😫', '😕', '😐', '😊', '🤩'][entry.mood - 1]}</span></div>
-              <div><span className="text-gray-400">Сон:</span> <span className="font-medium">{entry.sleepHours}ч</span></div>
+              <div><span style={{ color: 'var(--text-tertiary)' }}>Время:</span> <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{entry.actualDuration} мин</span></div>
+              {entry.distance > 0 && <div><span style={{ color: 'var(--text-tertiary)' }}>Дистанция:</span> <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{entry.distance} {entry.sport === 'swim' ? 'м' : 'км'}</span></div>}
+              {entry.avgHR > 0 && <div><span style={{ color: 'var(--text-tertiary)' }}>ЧСС:</span> <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{entry.avgHR} уд/мин</span></div>}
+              {entry.avgPace && <div><span style={{ color: 'var(--text-tertiary)' }}>{entry.sport === 'bike' ? 'Скорость:' : 'Темп:'}</span> <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{entry.avgPace} {entry.sport === 'swim' ? 'мин/100м' : entry.sport === 'bike' ? 'км/ч' : 'мин/км'}</span></div>}
+              <div><span style={{ color: 'var(--text-tertiary)' }}>RPE:</span> <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{entry.rpe}/10</span></div>
+              <div><span style={{ color: 'var(--text-tertiary)' }}>TSS:</span> <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{entry.tss}</span></div>
+              <div><span style={{ color: 'var(--text-tertiary)' }}>Настроение:</span> <span>{['😫', '😕', '😐', '😊', '🤩'][entry.mood - 1]}</span></div>
+              <div><span style={{ color: 'var(--text-tertiary)' }}>Сон:</span> <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{entry.sleepHours}ч</span></div>
             </div>
             {entry.comment && (
-              <p className="text-sm text-gray-500 mt-2 italic">«{entry.comment}»</p>
+              <p className="text-sm mt-2 italic" style={{ color: 'var(--text-secondary)' }}>«{entry.comment}»</p>
             )}
           </div>
         ))}
