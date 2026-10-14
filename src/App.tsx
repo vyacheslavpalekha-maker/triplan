@@ -9,6 +9,7 @@ import { PlanOverview } from './components/PlanOverview';
 import { TrainingJournal } from './components/TrainingJournal';
 import { Analytics } from './components/Analytics';
 import { NutritionRecovery } from './components/NutritionRecovery';
+import { StrengthRecovery } from './components/StrengthRecovery';
 
 const defaultProfile: AthleteProfile = {
   name: '',
@@ -163,6 +164,7 @@ function App() {
     { id: 'journal', label: 'Журнал', icon: 'fa-book' },
     { id: 'analytics', label: 'Аналитика', icon: 'fa-chart-line' },
     { id: 'nutrition', label: 'Питание', icon: 'fa-utensils' },
+    { id: 'strength', label: 'Силовая', icon: 'fa-dumbbell' },
   ];
 
   const earnedCount = badges.filter(b => b.earned).length;
@@ -366,6 +368,16 @@ function App() {
               <p className="text-gray-500 text-sm mt-1">Рекомендации по питанию и стратегии восстановления</p>
             </div>
             <NutritionRecovery profile={profile} raceConfig={raceConfig} />
+          </div>
+        )}
+
+        {activeTab === 'strength' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">Силовая подготовка и восстановление</h2>
+              <p className="text-gray-500 text-sm mt-1">Укрепление мышц, кор, растяжка, баня и массаж</p>
+            </div>
+            <StrengthRecovery profile={profile} />
           </div>
         )}
       </main>

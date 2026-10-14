@@ -2,9 +2,9 @@ export type Distance = 'sprint' | 'olympic' | 'half_iron' | 'ironman';
 export type Level = 'beginner' | 'intermediate' | 'advanced';
 export type Sport = 'swim' | 'bike' | 'run';
 export type Intensity = 'easy' | 'moderate' | 'hard' | 'recovery';
-export type SessionType = 'interval' | 'tempo' | 'long' | 'recovery' | 'brick' | 'technique';
+export type SessionType = 'interval' | 'tempo' | 'long' | 'recovery' | 'brick' | 'technique' | 'strength' | 'core' | 'stretch' | 'swim_brick' | 'bike_run_brick';
 export type ReadinessLevel = 'green' | 'yellow' | 'red';
-export type Tab = 'profile' | 'plan' | 'journal' | 'analytics' | 'nutrition';
+export type Tab = 'profile' | 'plan' | 'journal' | 'analytics' | 'nutrition' | 'strength';
 
 export interface HeartRateZones {
   maxHR: number;

@@ -149,6 +149,143 @@ function calculateTSS(duration: number, intensity: Intensity): number {
   return Math.round((duration / 60) * intFactor[intensity] * intFactor[intensity] * 100);
 }
 
+function generateStrengthSession(day: number, duration: number, weekNum: number, profile: AthleteProfile, focus: 'upper' | 'lower' | 'full'): TrainingSession {
+  const exercises: Record<string, { name: string; sets: string; reps: string }> = {
+    upper: {
+      name: 'Силовая тренировка (верх тела)',
+      sets: '3-4',
+      reps: '8-12',
+    },
+    lower: {
+      name: 'Силовая тренировка (низ тела)',
+      sets: '3-4',
+      reps: '8-12',
+    },
+    full: {
+      name: 'Силовая тренировка (полное тело)',
+      sets: '3',
+      reps: '10-15',
+    },
+  };
+
+  const ex = exercises[focus];
+  
+  const workoutDetails: Record<string, string> = {
+    upper: `Разминка: 5мин кардио + суставная гимнастика.
+Основная часть:
+• Отжимания: ${ex.sets}x${ex.reps}
+• Подтягивания/тяга блока: ${ex.sets}x${ex.reps}
+• Жим гантелей: ${ex.sets}x${ex.reps}
+• Тяга гантели в наклоне: ${ex.sets}x${ex.reps}
+• Планка: 3x45сек
+Заминка: растяжка 5мин.`,
+    lower: `Разминка: 5мин кардио + суставная гимнастика.
+Основная часть:
+• Приседания: ${ex.sets}x${ex.reps}
+• Выпады: ${ex.sets}x12 на каждую ногу
+• Становая тяга: ${ex.sets}x${ex.reps}
+• Подъём на носки: ${ex.sets}x15
+• Ягодичный мост: ${ex.sets}x15
+Заминка: растяжка 5мин.`,
+    full: `Разминка: 5мин кардио + суставная гимнастика.
+Основная часть (круговая):
+• Приседания: ${ex.sets}x${ex.reps}
+• Отжимания: ${ex.sets}x${ex.reps}
+• Выпады: ${ex.sets}x10 на каждую ногу
+• Тяга гантели: ${ex.sets}x${ex.reps}
+• Планка: 3x45сек
+Отдых между кругами: 90сек.
+Заминка: растяжка 5мин.`,
+  };
+
+  return {
+    id: `strength-${weekNum}-${day}`,
+    day,
+    sport: 'swim', // Используем swim как заглушку, но тип будет strength
+    type: 'strength',
+    intensity: 'moderate',
+    duration,
+    targetHR: 'Зона 2-3 (умеренная интенсивность)',
+    targetPace: 'Силовая работа',
+    description: ex.name,
+    details: workoutDetails[focus],
+    completed: false,
+  };
+}
+
+function generateCoreSession(day: number, duration: number, weekNum: number, profile: AthleteProfile): TrainingSession {
+  return {
+    id: `core-${weekNum}-${day}`,
+    day,
+    sport: 'swim', // Используем swim как заглушку
+    type: 'core',
+    intensity: 'easy',
+    duration,
+    targetHR: 'Зона 1-2 (низкая интенсивность)',
+    targetPace: 'Укрепление кора',
+    description: 'Укрепление кора: стабилизация, баланс, функциональные упражнения',
+    details: `Разминка: 3мин лёгкое кардио.
+Основная часть (3 круга):
+• Планка: 45сек
+• Боковая планка: 30сек на каждую сторону
+• Мёртвый жук: 12 повторений
+• Супермен: 12 повторений
+• Русский твист: 20 повторений
+• Птица-собака: 10 на каждую сторону
+Отдых между кругами: 60сек.
+Заминка: растяжка 3мин.`,
+    completed: false,
+  };
+}
+
+function generateStretchSession(day: number, duration: number, weekNum: number, profile: AthleteProfile, afterSport?: Sport): TrainingSession {
+  const focusAreas: Record<string, string> = {
+    swim: 'плечи, спина, грудь',
+    bike: 'ноги (квадрицепсы, бицепс бедра, икры), спина',
+    run: 'ноги (все группы), спина, плечи',
+    general: 'все основные группы мышц',
+  };
+
+  const focus = afterSport ? focusAreas[afterSport] : focusAreas.general;
+
+  return {
+    id: `stretch-${weekNum}-${day}`,
+    day,
+    sport: 'swim', // Используем swim как заглушку
+    type: 'stretch',
+    intensity: 'recovery',
+    duration,
+    targetHR: 'Зона 1 (восстановление)',
+    targetPace: 'Растяжка',
+    description: `Растяжка: ${focus}`,
+    details: `Статическая растяжка (удержание 30-45сек каждое упражнение):
+${afterSport === 'swim' ? `• Растяжка плеч (рука за голову)
+• Растяжка грудных мышц (в дверном проёме)
+• Растяжка широчайших (наклоны в сторону)
+• Растяжка трицепса
+• Растяжка спины (поза ребёнка)` : 
+afterSport === 'bike' ? `• Растяжка квадрицепсов (стоя)
+• Растяжка бицепса бедра (наклоны)
+• Растяжка икр (у стены)
+• Растяжка поясницы (кошка-корова)
+• Растяжка сгибателей бедра (выпады)` :
+afterSport === 'run' ? `• Растяжка квадрицепсов
+• Растяжка бицепса бедра
+• Растяжка икр
+• Растяжка ягодиц (_figure 4_)
+• Растяжка спины
+• Растяжка плеч` :
+`• Растяжка плеч и рук
+• Растяжка спины
+• Растяжка ног (все группы)
+• Растяжка бёдер
+• Дыхательные упражнения`}
+
+Всего: ${duration} минут.`,
+    completed: false,
+  };
+}
+
 function generateSwimSession(day: number, intensity: Intensity, type: SessionType, duration: number, weekNum: number, profile: AthleteProfile): TrainingSession {
   const descriptions: Record<SessionType, string> = {
     interval: `Интервальное плавание: ${Math.round(duration * 0.6)}м работа + восстановление`,
@@ -157,6 +294,11 @@ function generateSwimSession(day: number, intensity: Intensity, type: SessionTyp
     recovery: `Восстановительное плавание: лёгкие упражнения на технику`,
     technique: `Техническая тренировка: drills, работа над гребком и дыханием`,
     brick: `Комплексная тренировка: плавание + переход`,
+    strength: `Силовая тренировка в бассейне: упражнения с сопротивлением`,
+    core: `Укрепление кора в воде: упражнения на стабилизацию`,
+    stretch: `Растяжка после плавания: 10-15 мин`,
+    swim_brick: `Брик: плавание + переход к велосипеду`,
+    bike_run_brick: `Брик: велосипед + бег`,
   };
 
   const details: Record<SessionType, string> = {
@@ -166,6 +308,11 @@ function generateSwimSession(day: number, intensity: Intensity, type: SessionTyp
     recovery: `Разминка: 200м. Упражнения: 8x50м drills. Заминка: 200м спокойно.`,
     technique: `Разминка: 200м. Drills: catch-up, fingertip drag, single arm. Основная: 6x100м с фокусом на технику.`,
     brick: `Разминка: 200м. Основная: 4x200м с ускорениями. Переход к велосипеду.`,
+    strength: `Разминка: 200м. Основная: 8x50м с колодкой/лопатками. Заминка: 200м.`,
+    core: `Разминка: 200м. Основная: 6x50м на спине с акцентом на стабилизацию корпуса.`,
+    stretch: `После плавания: статическая растяжка плечевого пояса, спины, ног. 10-15 мин.`,
+    swim_brick: `Плавание 800-1200м + немедленный переход к велосипеду (5-10 мин).`,
+    bike_run_brick: `Велосипед + бег (комбинированная тренировка).`,
   };
 
   return {
@@ -191,6 +338,11 @@ function generateBikeSession(day: number, intensity: Intensity, type: SessionTyp
     recovery: `Восстановительная поездка: лёгкий крутинг, зона 1-2`,
     technique: `Техническая работа: cadence drills, работа на холмах`,
     brick: `Велосипед + переход к бегу: ${Math.round(duration * 0.8)}мин вело + ${Math.round(duration * 0.2)}мин бег`,
+    strength: `Силовая тренировка на велосипеде: работа на больших передачах`,
+    core: `Укрепление кора: упражнения на стабилизацию во время поездки`,
+    stretch: `Растяжка после велосипеда: 10-15 мин`,
+    swim_brick: `Брик: плавание + велосипед`,
+    bike_run_brick: `Брик: велосипед + бег`,
   };
 
   const details: Record<SessionType, string> = {
@@ -200,6 +352,11 @@ function generateBikeSession(day: number, intensity: Intensity, type: SessionTyp
     recovery: `Лёгкий крутинг 60мин, зона 1-2. Каденс 85-95 об/мин.`,
     technique: `Разминка 10мин. Single leg drills 4x2мин. Hill repeats 6x2мин. Заминка 10мин.`,
     brick: `Вело: 40мин зона 3. Переход: бег 10мин зона 2-3 для адаптации ног.`,
+    strength: `Разминка 15мин. Основная: 6x3мин на большой передаче (50-60 об/мин), зона 3. Заминка 15мин.`,
+    core: `Во время поездки: 3x5мин с акцентом на стабилизацию корпуса, руки на верху руля.`,
+    stretch: `После велосипеда: растяжка ног, спины, плеч. 10-15 мин.`,
+    swim_brick: `Плавание + велосипед (комбинированная тренировка).`,
+    bike_run_brick: `Вело: 40-60мин зона 3. Переход: бег 10-20мин зона 2-3 для адаптации ног.`,
   };
 
   return {
@@ -225,6 +382,11 @@ function generateRunSession(day: number, intensity: Intensity, type: SessionType
     recovery: `Восстановительный бег: очень лёгкий темп, разговорный`,
     technique: `Технический бег: drills, ускорения, работа над каденсом`,
     brick: `Бег после велосипеда: адаптация ног к беговому шагу`,
+    strength: `Силовой бег: работа в горку или с сопротивлением`,
+    core: `Укрепление кора: беговые упражнения на стабилизацию`,
+    stretch: `Растяжка после бега: 10-15 мин`,
+    swim_brick: `Брик: плавание + бег`,
+    bike_run_brick: `Брик: велосипед + бег`,
   };
 
   const details: Record<SessionType, string> = {
@@ -234,6 +396,11 @@ function generateRunSession(day: number, intensity: Intensity, type: SessionType
     recovery: `Лёгкий бег 30-40мин, зона 1. Каденс 170-180 шагов/мин.`,
     technique: `Разминка 10мин. A-скок, B-скок, захлёст. 6x100м ускорения. Заминка 10мин.`,
     brick: `После велосипеда: бег 15-20мин. Фокус на быстрый переход на беговой шаг. Зона 2-3.`,
+    strength: `Разминка 10мин. Основная: 8x30сек в горку (уклон 5-8%), ходьба вниз. Заминка 10мин.`,
+    core: `Во время бега: 3x5мин с акцентом на стабилизацию корпуса, высокий каденс.`,
+    stretch: `После бега: растяжка ног, спины, плеч. 10-15 мин.`,
+    swim_brick: `Плавание + бег (комбинированная тренировка).`,
+    bike_run_brick: `Вело: 40-60мин зона 3. Переход: бег 10-20мин зона 2-3 для адаптации ног.`,
   };
 
   return {
@@ -358,6 +525,35 @@ export function generateWeekPlan(
       sessions.push(generateRunSession(brickDay, 'moderate', 'brick', Math.round(runDuration * 0.8), weekNumber, profile));
     }
   }
+
+  // === STRENGTH training (2x per week) ===
+  const strengthDays = [1, 4].filter(d => (occupiedDays.get(d) || 0) < 2); // Вт, Пт
+  if (strengthDays.length >= 1) {
+    sessions.push(generateStrengthSession(strengthDays[0], 45, weekNumber, profile, 'lower'));
+    addOccupied(strengthDays[0]);
+  }
+  if (strengthDays.length >= 2) {
+    sessions.push(generateStrengthSession(strengthDays[1], 45, weekNumber, profile, 'upper'));
+    addOccupied(strengthDays[1]);
+  }
+
+  // === CORE training (2-3x per week) ===
+  const coreDays = [0, 2, 5].filter(d => (occupiedDays.get(d) || 0) < 2); // Пн, Ср, Сб
+  if (coreDays.length >= 1) {
+    sessions.push(generateCoreSession(coreDays[0], 20, weekNumber, profile));
+    addOccupied(coreDays[0]);
+  }
+  if (coreDays.length >= 2) {
+    sessions.push(generateCoreSession(coreDays[1], 20, weekNumber, profile));
+    addOccupied(coreDays[1]);
+  }
+
+  // === STRETCH sessions (after main workouts) ===
+  // Add stretch after long sessions
+  const longSessions = sessions.filter(s => s.duration >= 60);
+  longSessions.slice(0, 3).forEach(session => {
+    sessions.push(generateStretchSession(session.day, 15, weekNumber, profile, session.sport));
+  });
 
   // === Ограничение интенсивности на основе здоровья ===
   const intensityOrder: Intensity[] = ['recovery', 'easy', 'moderate', 'hard'];

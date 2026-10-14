@@ -21,6 +21,12 @@ const SPORT_CONFIG: Record<Sport, { icon: string; color: string; bg: string; nam
   run: { icon: '🏃', color: 'text-red-600', bg: 'bg-red-50 border-red-200', name: 'Бег' },
 };
 
+const SESSION_TYPE_CONFIG: Record<string, { icon: string; color: string; bg: string; name: string }> = {
+  strength: { icon: '💪', color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200', name: 'Силовая' },
+  core: { icon: '🎯', color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-200', name: 'Кор' },
+  stretch: { icon: '🧘', color: 'text-pink-600', bg: 'bg-pink-50 border-pink-200', name: 'Растяжка' },
+};
+
 const INTENSITY_COLORS: Record<string, string> = {
   easy: 'bg-green-400',
   moderate: 'bg-yellow-400',
@@ -30,7 +36,10 @@ const INTENSITY_COLORS: Record<string, string> = {
 
 const SessionCard: React.FC<{ session: TrainingSession }> = ({ session }) => {
   const [expanded, setExpanded] = useState(false);
-  const config = SPORT_CONFIG[session.sport];
+  
+  // Определяем конфигурацию на основе типа сессии
+  const isSpecialSession = ['strength', 'core', 'stretch'].includes(session.type);
+  const config = isSpecialSession ? SESSION_TYPE_CONFIG[session.type] : SPORT_CONFIG[session.sport];
 
   return (
     <div
@@ -53,15 +62,17 @@ const SessionCard: React.FC<{ session: TrainingSession }> = ({ session }) => {
       <p className="text-xs text-gray-600 mt-2 line-clamp-2">{session.description}</p>
       {expanded && (
         <div className="mt-3 pt-3 border-t border-gray-200/50 space-y-2">
-          <p className="text-xs text-gray-700 leading-relaxed">{session.details}</p>
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1 text-[10px] bg-white/80 rounded-full px-2 py-1 text-red-600">
-              <i className="fas fa-heart-pulse"></i> {session.targetHR}
-            </span>
-            <span className="inline-flex items-center gap-1 text-[10px] bg-white/80 rounded-full px-2 py-1 text-purple-600">
-              <i className="fas fa-gauge-high"></i> {session.targetPace}
-            </span>
-          </div>
+          <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">{session.details}</p>
+          {!isSpecialSession && (
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1 text-[10px] bg-white/80 rounded-full px-2 py-1 text-red-600">
+                <i className="fas fa-heart-pulse"></i> {session.targetHR}
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] bg-white/80 rounded-full px-2 py-1 text-purple-600">
+                <i className="fas fa-gauge-high"></i> {session.targetPace}
+              </span>
+            </div>
+          )}
         </div>
       )}
     </div>
