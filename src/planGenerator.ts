@@ -1,4 +1,4 @@
-import { AthleteProfile, RaceConfig, TrainingSession, WeekPlan, Distance, Level, Sport, Intensity, SessionType } from './types';
+import { AthleteProfile, RaceConfig, TrainingSession, WeekPlan, Distance, Level, Sport, Intensity, SessionType, TrainingLogEntry, FitnessMetrics } from './types';
 
 function getPhase(weekNumber: number, totalWeeks: number): string {
   const progress = weekNumber / totalWeeks;
@@ -35,7 +35,64 @@ function getLevelMultiplier(level: Level): number {
   }
 }
 
-function generateSwimSession(day: number, intensity: Intensity, type: SessionType, duration: number, weekNum: number): TrainingSession {
+function getTargetHR(intensity: Intensity, profile: AthleteProfile): string {
+  const z = profile.hrZones;
+  switch (intensity) {
+    case 'recovery': return `${z.zone1.min}-${z.zone1.max} уд/мин (Зона 1)`;
+    case 'easy': return `${z.zone2.min}-${z.zone2.max} уд/мин (Зона 2)`;
+    case 'moderate': return `${z.zone3.min}-${z.zone3.max} уд/мин (Зона 3)`;
+    case 'hard': return `${z.zone4.min}-${z.zone5.max} уд/мин (Зона 4-5)`;
+  }
+}
+
+function getTargetPace(sport: Sport, intensity: Intensity, profile: AthleteProfile): string {
+  const pz = profile.paceZones;
+  if (sport === 'swim') {
+    const base = pz.swimCSS;
+    switch (intensity) {
+      case 'recovery': return `+15сек к CSS (${base + 15}сек/100м)`;
+      case 'easy': return `+10сек к CSS (${base + 10}сек/100м)`;
+      case 'moderate': return `CSS темп (${base}сек/100м)`;
+      case 'hard': return `-5сек от CSS (${base - 5}сек/100м)`;
+    }
+  }
+  if (sport === 'bike') {
+    const ftp = pz.bikeFTP;
+    switch (intensity) {
+      case 'recovery': return `${Math.round(ftp * 0.50)}-${Math.round(ftp * 0.55)}W (50-55% FTP)`;
+      case 'easy': return `${Math.round(ftp * 0.56)}-${Math.round(ftp * 0.75)}W (56-75% FTP)`;
+      case 'moderate': return `${Math.round(ftp * 0.76)}-${Math.round(ftp * 0.90)}W (76-90% FTP)`;
+      case 'hard': return `${Math.round(ftp * 0.91)}-${Math.round(ftp * 1.05)}W (91-105% FTP)`;
+    }
+  }
+  if (sport === 'run') {
+    switch (intensity) {
+      case 'recovery': return `Легче ${pz.runEasyPace} мин/км`;
+      case 'easy': return `${pz.runEasyPace} мин/км`;
+      case 'moderate': return `${pz.runTempoPace} мин/км`;
+      case 'hard': return `${pz.runThresholdPace} мин/км и быстрее`;
+    }
+  }
+  return '';
+}
+
+function getAssignedDay(sport: Sport, dayIndex: number, profile: AthleteProfile): boolean {
+  const prefs = profile.dayPreferences[dayIndex];
+  if (!prefs || prefs.length === 0) return true; // no preference = any sport ok
+  return prefs.includes(sport);
+}
+
+function calculateTSS(duration: number, intensity: Intensity): number {
+  const intFactor: Record<Intensity, number> = {
+    recovery: 0.4,
+    easy: 0.6,
+    moderate: 0.8,
+    hard: 1.0,
+  };
+  return Math.round((duration / 60) * intFactor[intensity] * intFactor[intensity] * 100);
+}
+
+function generateSwimSession(day: number, intensity: Intensity, type: SessionType, duration: number, weekNum: number, profile: AthleteProfile): TrainingSession {
   const descriptions: Record<SessionType, string> = {
     interval: `Интервальное плавание: ${Math.round(duration * 0.6)}м работа + восстановление`,
     tempo: `Темповое плавание: непрерывное плавание в аэробном пороге`,
@@ -61,12 +118,15 @@ function generateSwimSession(day: number, intensity: Intensity, type: SessionTyp
     type,
     intensity,
     duration,
+    targetHR: getTargetHR(intensity, profile),
+    targetPace: getTargetPace('swim', intensity, profile),
     description: descriptions[type],
     details: details[type],
+    completed: false,
   };
 }
 
-function generateBikeSession(day: number, intensity: Intensity, type: SessionType, duration: number, weekNum: number): TrainingSession {
+function generateBikeSession(day: number, intensity: Intensity, type: SessionType, duration: number, weekNum: number, profile: AthleteProfile): TrainingSession {
   const descriptions: Record<SessionType, string> = {
     interval: `Интервалы на велосипеде: ${Math.floor(duration / 60)}ч работа на высокой мощности`,
     tempo: `Темповая поездка: устойчивый темп в зоне 3-4`,
@@ -92,12 +152,15 @@ function generateBikeSession(day: number, intensity: Intensity, type: SessionTyp
     type,
     intensity,
     duration,
+    targetHR: getTargetHR(intensity, profile),
+    targetPace: getTargetPace('bike', intensity, profile),
     description: descriptions[type],
     details: details[type],
+    completed: false,
   };
 }
 
-function generateRunSession(day: number, intensity: Intensity, type: SessionType, duration: number, weekNum: number): TrainingSession {
+function generateRunSession(day: number, intensity: Intensity, type: SessionType, duration: number, weekNum: number, profile: AthleteProfile): TrainingSession {
   const descriptions: Record<SessionType, string> = {
     interval: `Интервальный бег: ускорения с восстановлением`,
     tempo: `Темповой бег: устойчивый темп на аэробном пороге`,
@@ -123,8 +186,11 @@ function generateRunSession(day: number, intensity: Intensity, type: SessionType
     type,
     intensity,
     duration,
+    targetHR: getTargetHR(intensity, profile),
+    targetPace: getTargetPace('run', intensity, profile),
     description: descriptions[type],
     details: details[type],
+    completed: false,
   };
 }
 
@@ -138,7 +204,6 @@ export function generateWeekPlan(
   const levelMultiplier = getLevelMultiplier(profile.level);
   const baseHours = getDistanceBaseHours(raceConfig.distance);
 
-  // Adjust based on available hours
   const totalBaseHours = baseHours.swim + baseHours.bike + baseHours.run;
   const hourRatio = profile.weeklyHours / totalBaseHours;
 
@@ -149,46 +214,40 @@ export function generateWeekPlan(
   const sessions: TrainingSession[] = [];
   const days = profile.trainingDays;
 
-  // Swimming: 2-3 sessions per week
+  // Swimming: 2-3 sessions per week — respect day preferences
   const swimSessions = days >= 5 ? 3 : 2;
   const swimDuration = Math.round((swimHours * 60) / swimSessions);
 
-  if (swimSessions >= 2) {
-    sessions.push(generateSwimSession(0, 'moderate', 'interval', swimDuration, weekNumber));
-    sessions.push(generateSwimSession(2, 'easy', 'technique', Math.round(swimDuration * 0.8), weekNumber));
-  }
-  if (swimSessions >= 3) {
-    sessions.push(generateSwimSession(4, 'moderate', 'long', Math.round(swimDuration * 1.2), weekNumber));
-  }
+  const swimDays = [0, 2, 4].filter(d => getAssignedDay('swim', d, profile));
+  if (swimDays.length >= 1) sessions.push(generateSwimSession(swimDays[0], 'moderate', 'interval', swimDuration, weekNumber, profile));
+  if (swimDays.length >= 2) sessions.push(generateSwimSession(swimDays[1], 'easy', 'technique', Math.round(swimDuration * 0.8), weekNumber, profile));
+  if (swimDays.length >= 3) sessions.push(generateSwimSession(swimDays[2], 'moderate', 'long', Math.round(swimDuration * 1.2), weekNumber, profile));
 
   // Cycling: 2-3 sessions per week
   const bikeSessions = days >= 5 ? 3 : 2;
   const bikeDuration = Math.round((bikeHours * 60) / bikeSessions);
 
-  sessions.push(generateBikeSession(1, 'hard', 'interval', bikeDuration, weekNumber));
-  if (bikeSessions >= 2) {
-    sessions.push(generateBikeSession(3, 'easy', 'long', Math.round(bikeDuration * 1.5), weekNumber));
-  }
-  if (bikeSessions >= 3) {
-    sessions.push(generateBikeSession(5, 'moderate', 'brick', Math.round(bikeDuration * 0.8), weekNumber));
-  }
+  const bikeDays = [1, 3, 5].filter(d => getAssignedDay('bike', d, profile));
+  if (bikeDays.length >= 1) sessions.push(generateBikeSession(bikeDays[0], 'hard', 'interval', bikeDuration, weekNumber, profile));
+  if (bikeDays.length >= 2) sessions.push(generateBikeSession(bikeDays[1], 'easy', 'long', Math.round(bikeDuration * 1.5), weekNumber, profile));
+  if (bikeDays.length >= 3) sessions.push(generateBikeSession(bikeDays[2], 'moderate', 'brick', Math.round(bikeDuration * 0.8), weekNumber, profile));
 
   // Running: 3-4 sessions per week
   const runSessions = days >= 6 ? 4 : 3;
   const runDuration = Math.round((runHours * 60) / runSessions);
 
-  sessions.push(generateRunSession(0, 'hard', 'interval', runDuration, weekNumber));
-  sessions.push(generateRunSession(2, 'easy', 'recovery', Math.round(runDuration * 0.7), weekNumber));
-  if (runSessions >= 3) {
-    sessions.push(generateRunSession(4, 'moderate', 'tempo', Math.round(runDuration * 1.1), weekNumber));
-  }
-  if (runSessions >= 4) {
-    sessions.push(generateRunSession(6, 'easy', 'long', Math.round(runDuration * 1.8), weekNumber));
-  }
+  const runDays = [0, 2, 4, 6].filter(d => getAssignedDay('run', d, profile));
+  if (runDays.length >= 1) sessions.push(generateRunSession(runDays[0], 'hard', 'interval', runDuration, weekNumber, profile));
+  if (runDays.length >= 2) sessions.push(generateRunSession(runDays[1], 'easy', 'recovery', Math.round(runDuration * 0.7), weekNumber, profile));
+  if (runDays.length >= 3) sessions.push(generateRunSession(runDays[2], 'moderate', 'tempo', Math.round(runDuration * 1.1), weekNumber, profile));
+  if (runDays.length >= 4) sessions.push(generateRunSession(runDays[3], 'easy', 'long', Math.round(runDuration * 1.8), weekNumber, profile));
 
-  // Add brick session if advanced and enough days
+  // Add brick session if advanced
   if (profile.level === 'advanced' && days >= 5) {
-    sessions.push(generateRunSession(3, 'moderate', 'brick', Math.round(runDuration * 0.8), weekNumber));
+    const brickDay = [3, 5].find(d => getAssignedDay('run', d, profile) && getAssignedDay('bike', d, profile));
+    if (brickDay !== undefined) {
+      sessions.push(generateRunSession(brickDay, 'moderate', 'brick', Math.round(runDuration * 0.8), weekNumber, profile));
+    }
   }
 
   // Sort by day
@@ -199,6 +258,7 @@ export function generateWeekPlan(
   const swimVolume = sessions.filter(s => s.sport === 'swim').reduce((sum, s) => sum + s.duration, 0);
   const bikeVolume = sessions.filter(s => s.sport === 'bike').reduce((sum, s) => sum + s.duration, 0);
   const runVolume = sessions.filter(s => s.sport === 'run').reduce((sum, s) => sum + s.duration, 0);
+  const plannedTSS = sessions.reduce((sum, s) => sum + calculateTSS(s.duration, s.intensity), 0);
 
   return {
     weekNumber,
@@ -208,6 +268,7 @@ export function generateWeekPlan(
     swimVolume: Math.round(swimVolume / 60 * 10) / 10,
     bikeVolume: Math.round(bikeVolume / 60 * 10) / 10,
     runVolume: Math.round(runVolume / 60 * 10) / 10,
+    plannedTSS,
   };
 }
 
@@ -217,4 +278,56 @@ export function generateFullPlan(profile: AthleteProfile, raceConfig: RaceConfig
     plans.push(generateWeekPlan(profile, raceConfig, i));
   }
   return plans;
+}
+
+export function calculateFitnessMetrics(log: TrainingLogEntry[]): FitnessMetrics {
+  if (log.length === 0) return { ctl: 0, atl: 0, tsb: 0, rampRate: 0 };
+
+  // Sort by date
+  const sorted = [...log].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  // Simple exponential moving average
+  const ctlDecay = 42; // 42-day time constant
+  const atlDecay = 7;  // 7-day time constant
+
+  const now = new Date();
+  let ctl = 0;
+  let atl = 0;
+
+  sorted.forEach(entry => {
+    const daysAgo = (now.getTime() - new Date(entry.date).getTime()) / (1000 * 60 * 60 * 24);
+    ctl += entry.tss * Math.exp(-daysAgo / ctlDecay);
+    atl += entry.tss * Math.exp(-daysAgo / atlDecay);
+  });
+
+  ctl = Math.round(ctl);
+  atl = Math.round(atl);
+  const tsb = ctl - atl;
+
+  // Ramp rate: CTL change over last 4 weeks
+  const fourWeeksAgo = sorted.filter(e => {
+    const daysAgo = (now.getTime() - new Date(e.date).getTime()) / (1000 * 60 * 60 * 24);
+    return daysAgo <= 28;
+  });
+  const rampRate = fourWeeksAgo.length > 0 ? Math.round((ctl / 4) * 10) / 10 : 0;
+
+  return { ctl, atl, tsb, rampRate };
+}
+
+export function getReadiness(log: TrainingLogEntry[]): { level: 'green' | 'yellow' | 'red'; reason: string } {
+  if (log.length === 0) return { level: 'green', reason: 'Нет данных — предполагаем готовность' };
+
+  const recent = log.slice(-7);
+  const avgSleep = recent.reduce((s, e) => s + e.sleepHours, 0) / recent.length;
+  const avgSoreness = recent.reduce((s, e) => s + e.muscleSoreness, 0) / recent.length;
+  const avgMood = recent.reduce((s, e) => s + e.mood, 0) / recent.length;
+  const metrics = calculateFitnessMetrics(log);
+
+  if (avgSleep < 6 || avgSoreness > 3.5 || metrics.tsb < -30) {
+    return { level: 'red', reason: 'Низкое восстановление. Рекомендуется отдых или лёгкая тренировка.' };
+  }
+  if (avgSleep < 7 || avgSoreness > 2.5 || avgMood < 3 || metrics.tsb < -15) {
+    return { level: 'yellow', reason: 'Умеренная усталость. Можно тренироваться с осторожностью.' };
+  }
+  return { level: 'green', reason: 'Отличная форма! Можно выполнять план в полном объёме.' };
 }

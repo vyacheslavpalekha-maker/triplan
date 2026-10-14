@@ -46,8 +46,16 @@ const SessionCard: React.FC<{ session: TrainingSession }> = ({ session }) => {
       </div>
       <p className="text-xs text-gray-600 mt-2 line-clamp-2">{session.description}</p>
       {expanded && (
-        <div className="mt-3 pt-3 border-t border-gray-200/50">
+        <div className="mt-3 pt-3 border-t border-gray-200/50 space-y-2">
           <p className="text-xs text-gray-700 leading-relaxed">{session.details}</p>
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1 text-[10px] bg-white/80 rounded-full px-2 py-1 text-red-600">
+              <i className="fas fa-heart-pulse"></i> {session.targetHR}
+            </span>
+            <span className="inline-flex items-center gap-1 text-[10px] bg-white/80 rounded-full px-2 py-1 text-purple-600">
+              <i className="fas fa-gauge-high"></i> {session.targetPace}
+            </span>
+          </div>
         </div>
       )}
     </div>
@@ -76,6 +84,9 @@ export const WeekPlanView: React.FC<Props> = ({ plan, weekNumber, totalWeeks, on
             <span className="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
               {plan.phase}
             </span>
+            <span className="ml-2 inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
+              TSS: {plan.plannedTSS}
+            </span>
           </p>
         </div>
 
@@ -94,7 +105,7 @@ export const WeekPlanView: React.FC<Props> = ({ plan, weekNumber, totalWeeks, on
           <button
             onClick={() => onWeekChange(Math.min(totalWeeks, weekNumber + 1))}
             disabled={weekNumber >= totalWeeks}
-            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center disabled:opacity-30 transition-all"
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center disabled:opacity-300 transition-all"
           >
             <i className="fas fa-chevron-right text-xs text-gray-600"></i>
           </button>
