@@ -132,11 +132,17 @@ export const TrainingJournal: React.FC<Props> = ({ log, sessions, onAddEntry, on
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Средний темп (мин/км)</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                {newEntry.sport === 'swim' ? 'Средний темп (мин/100м)' : 
+                 newEntry.sport === 'bike' ? 'Средняя скорость (км/ч)' : 
+                 'Средний темп (мин/км)'}
+              </label>
               <input type="text" value={newEntry.avgPace}
                 onChange={(e) => setNewEntry({ ...newEntry, avgPace: e.target.value })}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none"
-                placeholder="5:30" />
+                placeholder={newEntry.sport === 'swim' ? '2:15' : 
+                             newEntry.sport === 'bike' ? '28.5' : 
+                             '5:30'} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Калории</label>
@@ -227,9 +233,9 @@ export const TrainingJournal: React.FC<Props> = ({ log, sessions, onAddEntry, on
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
               <div><span className="text-gray-400">Время:</span> <span className="font-medium">{entry.actualDuration} мин</span></div>
-              {entry.distance > 0 && <div><span className="text-gray-400">Дистанция:</span> <span className="font-medium">{entry.distance} км</span></div>}
+              {entry.distance > 0 && <div><span className="text-gray-400">Дистанция:</span> <span className="font-medium">{entry.distance} {entry.sport === 'swim' ? 'м' : 'км'}</span></div>}
               {entry.avgHR > 0 && <div><span className="text-gray-400">ЧСС:</span> <span className="font-medium">{entry.avgHR} уд/мин</span></div>}
-              {entry.avgPace && <div><span className="text-gray-400">Темп:</span> <span className="font-medium">{entry.avgPace} мин/км</span></div>}
+              {entry.avgPace && <div><span className="text-gray-400">{entry.sport === 'bike' ? 'Скорость:' : 'Темп:'}</span> <span className="font-medium">{entry.avgPace} {entry.sport === 'swim' ? 'мин/100м' : entry.sport === 'bike' ? 'км/ч' : 'мин/км'}</span></div>}
               <div><span className="text-gray-400">RPE:</span> <span className="font-medium">{entry.rpe}/10</span></div>
               <div><span className="text-gray-400">TSS:</span> <span className="font-medium">{entry.tss}</span></div>
               <div><span className="text-gray-400">Настроение:</span> <span>{['😫', '😕', '😐', '😊', '🤩'][entry.mood - 1]}</span></div>
