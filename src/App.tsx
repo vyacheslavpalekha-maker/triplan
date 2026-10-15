@@ -1,17 +1,20 @@
-import React, { useState, useMemo } from 'react';
-import { AthleteProfile, RaceConfig, WeekPlan, TrainingLogEntry, Badge, Tab } from './types';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { AthleteProfile, RaceConfig, TrainingLogEntry, Badge, Tab } from './types';
 import { generateFullPlan } from './planGenerator';
 import { analyzeGoalRealism } from './goalAnalyzer';
 import { AthleteProfileForm } from './components/AthleteProfileForm';
 import { RaceConfigForm } from './components/RaceConfigForm';
-import { WeekPlanView } from './components/WeekPlanView';
-import { PlanOverview } from './components/PlanOverview';
+import { TodayView } from './components/TodayView';
+import { WeekBoard } from './components/WeekBoard';
 import { TrainingJournal } from './components/TrainingJournal';
-import { Analytics } from './components/Analytics';
 import { NutritionRecovery } from './components/NutritionRecovery';
 import { StrengthRecovery } from './components/StrengthRecovery';
 import { ThemeProvider, useTheme } from './ThemeContext';
 import { Toaster } from './components/ui/toaster';
+import { buildBoard, currentPlanWeek, defaultRaceDate, estimateTss, type BoardSession } from './lib/schedule';
+import { loadTriPlanState, saveTriPlanState } from './lib/storage';
+import { InstallHint } from './components/InstallHint';
+import toast from 'react-hot-toast';
 
 const defaultProfile: AthleteProfile = {
   name: '',
@@ -63,7 +66,7 @@ const defaultProfile: AthleteProfile = {
 const defaultRaceConfig: RaceConfig = {
   distance: 'olympic',
   weeksToRace: 16,
-  raceDate: new Date(Date.now() + 16 * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  raceDate: defaultRaceDate(16),
   targetTime: '02:30:00',
   targetSwimTime: 1500,
   targetBikeTime: 4500,
@@ -129,22 +132,79 @@ function updateBadges(badges: Badge[], log: TrainingLogEntry[]): Badge[] {
   });
 }
 
+function mergeProfile(saved?: Partial<AthleteProfile>): AthleteProfile {
+  if (!saved) return defaultProfile;
+  return {
+    ...defaultProfile,
+    ...saved,
+    hrZones: {
+      ...defaultProfile.hrZones,
+      ...saved.hrZones,
+      zone1: { ...defaultProfile.hrZones.zone1, ...saved.hrZones?.zone1 },
+      zone2: { ...defaultProfile.hrZones.zone2, ...saved.hrZones?.zone2 },
+      zone3: { ...defaultProfile.hrZones.zone3, ...saved.hrZones?.zone3 },
+      zone4: { ...defaultProfile.hrZones.zone4, ...saved.hrZones?.zone4 },
+      zone5: { ...defaultProfile.hrZones.zone5, ...saved.hrZones?.zone5 },
+    },
+    paceZones: { ...defaultProfile.paceZones, ...saved.paceZones },
+    currentFitness: { ...defaultProfile.currentFitness, ...saved.currentFitness },
+    dayPreferences: { ...defaultProfile.dayPreferences, ...saved.dayPreferences },
+    healthRestrictions: { ...defaultProfile.healthRestrictions, ...saved.healthRestrictions },
+  };
+}
+
+function mergeBadges(saved?: Badge[]): Badge[] {
+  if (!saved) return defaultBadges;
+  return defaultBadges.map((badge) => {
+    const previous = saved.find((item) => item.id === badge.id);
+    return previous ? { ...badge, earned: previous.earned, earnedDate: previous.earnedDate } : badge;
+  });
+}
+
 function AppContent() {
   const { theme, toggleTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<Tab>('profile');
-  const [profile, setProfile] = useState<AthleteProfile>(defaultProfile);
-  const [raceConfig, setRaceConfig] = useState<RaceConfig>(defaultRaceConfig);
-  const [currentWeek, setCurrentWeek] = useState(1);
-  const [log, setLog] = useState<TrainingLogEntry[]>([]);
-  const [badges, setBadges] = useState<Badge[]>(defaultBadges);
+  const [saved] = useState(loadTriPlanState);
+  const [activeTab, setActiveTab] = useState<Tab>('today');
+  const [profile, setProfile] = useState<AthleteProfile>(() => mergeProfile(saved?.profile));
+  const [raceConfig, setRaceConfig] = useState<RaceConfig>(() => ({ ...defaultRaceConfig, ...saved?.raceConfig }));
+  const [currentWeek, setCurrentWeek] = useState(() => currentPlanWeek(
+    saved?.raceConfig?.raceDate || defaultRaceConfig.raceDate,
+    saved?.raceConfig?.weeksToRace || defaultRaceConfig.weeksToRace,
+  ));
+  const [log, setLog] = useState<TrainingLogEntry[]>(() => (Array.isArray(saved?.log) ? saved.log : []));
+  const [badges, setBadges] = useState<Badge[]>(() => mergeBadges(saved?.badges));
+  const [dayOverrides, setDayOverrides] = useState<Record<string, number>>(() => saved?.dayOverrides ?? {});
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    saveTriPlanState({ profile, raceConfig, log, badges, dayOverrides });
+  }, [profile, raceConfig, log, badges, dayOverrides]);
+
+  useEffect(() => {
+    setCurrentWeek(currentPlanWeek(raceConfig.raceDate, raceConfig.weeksToRace));
+  }, [raceConfig.raceDate, raceConfig.weeksToRace]);
+
+  useEffect(() => {
+    const onPointer = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (menuRef.current?.contains(target) || sheetRef.current?.contains(target)) return;
+      setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onPointer);
+    return () => document.removeEventListener('mousedown', onPointer);
+  }, []);
 
   const goalAnalysis = useMemo(() => {
     return analyzeGoalRealism(profile, raceConfig);
   }, [profile, raceConfig]);
 
-  const plans: WeekPlan[] = useMemo(() => {
+  const rawPlans = useMemo(() => {
     return generateFullPlan(profile, raceConfig, goalAnalysis.difficulty);
   }, [profile, raceConfig, goalAnalysis.difficulty]);
+
+  const plans = useMemo(() => buildBoard(rawPlans, dayOverrides), [rawPlans, dayOverrides]);
 
   const currentPlan = plans[currentWeek - 1];
 
@@ -160,37 +220,66 @@ function AppContent() {
     setBadges(updateBadges(badges, newLog));
   };
 
-  const tabs: { id: Tab; label: string; icon: string }[] = [
+  const handleCompleteSession = (session: BoardSession, weekNumber: number, date: string) => {
+    if (log.some(entry => entry.sessionId === session.boardId)) return;
+    const entry: TrainingLogEntry = {
+      id: `log-${Date.now()}`,
+      sessionId: session.boardId,
+      date,
+      weekNumber,
+      sport: session.sport,
+      plannedDuration: session.duration,
+      actualDuration: session.duration,
+      distance: 0,
+      avgHR: 0,
+      avgPace: session.targetPace,
+      rpe: session.intensity === 'hard' ? 8 : session.intensity === 'moderate' ? 6 : session.intensity === 'easy' ? 4 : 3,
+      calories: 0,
+      tss: estimateTss(session.duration, session.intensity),
+      comment: session.description,
+      mood: 4,
+      sleepHours: 7.5,
+      sleepQuality: 4,
+      muscleSoreness: 2,
+    };
+    handleAddEntry(entry);
+    toast.success('Тренировка записана в журнал');
+  };
+
+  const primaryTabs: { id: Tab; label: string; icon: string }[] = [
+    { id: 'today', label: 'Сегодня', icon: 'fa-sun' },
+    { id: 'week', label: 'Неделя', icon: 'fa-calendar-week' },
+  ];
+
+  const moreTabs: { id: Tab; label: string; icon: string }[] = [
     { id: 'profile', label: 'Профиль', icon: 'fa-user' },
-    { id: 'plan', label: 'План', icon: 'fa-calendar-alt' },
     { id: 'journal', label: 'Журнал', icon: 'fa-book' },
-    { id: 'analytics', label: 'Аналитика', icon: 'fa-chart-line' },
     { id: 'nutrition', label: 'Питание', icon: 'fa-utensils' },
     { id: 'strength', label: 'Силовая', icon: 'fa-dumbbell' },
   ];
 
-  const earnedCount = badges.filter(b => b.earned).length;
+  const moreActive = moreTabs.some(tab => tab.id === activeTab);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+    <div className="min-h-screen pb-24 md:pb-0" style={{ backgroundColor: 'var(--bg-secondary)' }}>
       {/* Header */}
       <header className="header sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--accent-primary)' }}>
-                <span className="text-white text-lg font-bold">T</span>
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg">
+                <img src={`${import.meta.env.BASE_URL}icon-192.png`} alt="" className="h-full w-full object-cover" />
               </div>
               <div>
                 <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>TriPlan</h1>
-                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Тренировочный план для триатлона</p>
+                <p className="hidden text-xs sm:block" style={{ color: 'var(--text-tertiary)' }}>Тренировочный план для триатлона</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               {/* Desktop tabs */}
               <nav className="hidden md:flex items-center gap-1">
-                {tabs.map(tab => (
+                {primaryTabs.map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
@@ -200,6 +289,35 @@ function AppContent() {
                     {tab.label}
                   </button>
                 ))}
+                <div className="relative" ref={menuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen(open => !open)}
+                    className={`tab-btn ${moreActive ? 'active' : ''}`}
+                  >
+                    <i className="fas fa-ellipsis mr-1.5"></i>
+                    Ещё
+                  </button>
+                  {menuOpen && (
+                    <div
+                      className="absolute right-0 mt-2 w-48 rounded-xl py-1 shadow-lg"
+                      style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}
+                    >
+                      {moreTabs.map(tab => (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => { setActiveTab(tab.id); setMenuOpen(false); }}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm"
+                          style={{ color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-primary)' }}
+                        >
+                          <i className={`fas ${tab.icon} w-4`}></i>
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </nav>
 
               {/* Theme toggle */}
@@ -208,25 +326,12 @@ function AppContent() {
               </button>
             </div>
           </div>
-
-          {/* Mobile tabs */}
-          <nav className="md:hidden flex items-center gap-1 mt-3 overflow-x-auto pb-1">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`tab-btn whitespace-nowrap ${activeTab === tab.id ? 'active' : ''}`}
-              >
-                <i className={`fas ${tab.icon} mr-1`}></i>
-                {tab.label}
-              </button>
-            ))}
-          </nav>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        <InstallHint />
         {activeTab === 'profile' && (
           <div className="space-y-6">
             <div className="text-center mb-6">
@@ -259,7 +364,7 @@ function AppContent() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setActiveTab('plan')}
+                  onClick={() => setActiveTab('week')}
                   className="garmin-btn w-full"
                 >
                   Сформировать план <i className="fas fa-arrow-right ml-2"></i>
@@ -269,49 +374,32 @@ function AppContent() {
           </div>
         )}
 
-        {activeTab === 'plan' && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                  План для {profile.name || 'спортсмена'}
-                </h2>
-                <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>
-                  Подготовка к дистанции «{
-                    raceConfig.distance === 'sprint' ? 'Спринт' :
-                    raceConfig.distance === 'olympic' ? 'Олимпийская' :
-                    raceConfig.distance === 'half_iron' ? '70.3' : 'IRONMAN'
-                  }» • Старт: {new Date(raceConfig.raceDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
-                  {raceConfig.targetTime && (
-                    <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}>
-                      🎯 {raceConfig.targetTime}
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              <div className="lg:col-span-3">
-                {currentPlan && (
-                  <WeekPlanView
-                    plan={currentPlan}
-                    weekNumber={currentWeek}
-                    totalWeeks={raceConfig.weeksToRace}
-                    onWeekChange={setCurrentWeek}
-                    profile={profile}
-                    raceConfig={raceConfig}
-                  />
-                )}
-              </div>
-              <div className="lg:col-span-1">
-                <PlanOverview
-                  plans={plans}
-                  currentWeek={currentWeek}
-                  onWeekSelect={setCurrentWeek}
-                />
-              </div>
-            </div>
-          </div>
+        {activeTab === 'today' && (
+          <TodayView
+            profile={profile}
+            raceConfig={raceConfig}
+            plans={plans}
+            log={log}
+            badges={badges}
+            goalAnalysis={goalAnalysis}
+            onComplete={handleCompleteSession}
+            onOpenWeek={(week) => { setCurrentWeek(week); setActiveTab('week'); }}
+            onOpenProfile={() => setActiveTab('profile')}
+            onOpenJournal={() => setActiveTab('journal')}
+          />
+        )}
+
+        {activeTab === 'week' && (
+          <WeekBoard
+            plans={plans}
+            weekNumber={Math.min(currentWeek, plans.length) || 1}
+            raceConfig={raceConfig}
+            profile={profile}
+            log={log}
+            onWeekChange={setCurrentWeek}
+            onMove={(boardId, day) => setDayOverrides(prev => ({ ...prev, [boardId]: day }))}
+            onComplete={handleCompleteSession}
+          />
         )}
 
         {activeTab === 'journal' && (
@@ -325,21 +413,6 @@ function AppContent() {
               sessions={currentPlan?.sessions || []}
               onAddEntry={handleAddEntry}
               onDeleteEntry={handleDeleteEntry}
-            />
-          </div>
-        )}
-
-        {activeTab === 'analytics' && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Аналитика и мотивация</h2>
-              <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>Отслеживайте форму, усталость и достижения</p>
-            </div>
-            <Analytics
-              log={log}
-              badges={badges}
-              raceDate={raceConfig.raceDate}
-              goalRace={profile.goalRace}
             />
           </div>
         )}
@@ -365,7 +438,58 @@ function AppContent() {
         )}
       </main>
 
-      {/* Footer */}
+      <nav className="phone-tabbar fixed inset-x-0 bottom-0 z-40 border-t md:hidden" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
+        {menuOpen && (
+          <div ref={sheetRef} className="absolute bottom-full left-3 right-3 mb-2 rounded-xl py-1 shadow-lg" style={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}>
+            {moreTabs.filter(tab => tab.id !== 'journal').map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => { setActiveTab(tab.id); setMenuOpen(false); }}
+                className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm"
+                style={{ color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-primary)' }}
+              >
+                <i className={`fas ${tab.icon} w-4`}></i>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="grid grid-cols-4">
+          {primaryTabs.map(tab => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => { setActiveTab(tab.id); setMenuOpen(false); }}
+              className="flex min-h-14 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium"
+              style={{ color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-tertiary)' }}
+            >
+              <i className={`fas ${tab.icon} text-base`}></i>
+              {tab.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => { setActiveTab('journal'); setMenuOpen(false); }}
+            className="flex min-h-14 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium"
+            style={{ color: activeTab === 'journal' ? 'var(--accent-primary)' : 'var(--text-tertiary)' }}
+          >
+            <i className="fas fa-book text-base"></i>
+            Журнал
+          </button>
+          <button
+            type="button"
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={() => setMenuOpen(open => !open)}
+            className="flex min-h-14 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium"
+            style={{ color: moreActive ? 'var(--accent-primary)' : 'var(--text-tertiary)' }}
+          >
+            <i className="fas fa-ellipsis text-base"></i>
+            Ещё
+          </button>
+        </div>
+      </nav>
+
       <footer className="mt-8 py-4" style={{ borderTop: '1px solid var(--border-color)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center text-xs" style={{ color: 'var(--text-tertiary)' }}>
           <p>TriPlan — Генератор тренировочных планов для триатлона</p>

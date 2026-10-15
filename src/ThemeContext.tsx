@@ -18,6 +18,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     localStorage.setItem('triplan-theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
+    const color = theme === 'dark' ? '#1a2332' : '#007CC3';
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      document.head.appendChild(meta);
+    }
+    meta.content = color;
   }, [theme]);
 
   const toggleTheme = () => {

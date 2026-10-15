@@ -224,14 +224,14 @@ export const AthleteProfileForm: React.FC<Props> = ({ profile, onChange }) => {
                 const colors = ['rgba(0, 164, 228, 0.1)', 'rgba(0, 200, 83, 0.1)', 'rgba(255, 152, 0, 0.1)', 'rgba(255, 87, 34, 0.1)', 'rgba(244, 67, 54, 0.1)'];
                 return (
                   <div key={zone} className="p-3 rounded-xl" style={{ backgroundColor: colors[i], border: '1px solid var(--border-color)' }}>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                       <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Зона {i + 1}: {z.name}</span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2">
                         <input type="number" value={z.min} onChange={(e) => updateHRZone(zone, 'min', parseInt(e.target.value) || 0)}
-                          className="garmin-input w-16 text-center text-sm" />
+                          className="garmin-input zone-hr-input text-sm" />
                         <span style={{ color: 'var(--text-tertiary)' }}>—</span>
                         <input type="number" value={z.max} onChange={(e) => updateHRZone(zone, 'max', parseInt(e.target.value) || 0)}
-                          className="garmin-input w-16 text-center text-sm" />
+                          className="garmin-input zone-hr-input text-sm" />
                         <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>уд/мин</span>
                       </div>
                     </div>

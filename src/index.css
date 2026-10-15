@@ -161,6 +161,22 @@ body {
   box-shadow: 0 0 0 3px rgba(0, 124, 195, 0.1);
 }
 
+.zone-hr-input {
+  width: 4.75rem;
+  min-width: 4.75rem;
+  flex-shrink: 0;
+  padding: 8px 6px;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.zone-hr-input::-webkit-outer-spin-button,
+.zone-hr-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* Stat card */
 .stat-card {
   background-color: var(--bg-primary);
@@ -228,6 +244,11 @@ body {
   background-color: var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding-top: env(safe-area-inset-top);
+}
+
+.phone-tabbar {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Theme toggle button */
