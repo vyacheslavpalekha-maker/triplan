@@ -10,6 +10,10 @@
     <meta name="apple-mobile-web-app-title" content="TriPlan" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
     <link rel="apple-touch-icon" href="%BASE_URL%apple-touch-icon.png" />
+    <meta
+      name="description"
+      content="TriPlan — тренировочный план триатлета на телефоне: сегодняшняя сессия, неделя, журнал и профиль. Ставится на экран «Домой»."
+    />
     <title>TriPlan — Тренировочный план для триатлона</title>
     <link
       rel="stylesheet"
@@ -18,7 +22,6 @@
       onload="this.media='all'"
     />
     <style>
-      /* 内联样式确保主题色立即生效，避免闪烁 */
       html,
       body {
         margin: 0;
@@ -38,7 +41,6 @@
       }
     </style>
     <script>
-      // 在 React 加载前立即设置主题，避免闪烁
       (function () {
         const isInIframe = window.self !== window.top;
 
@@ -49,7 +51,6 @@
         }
 
         if (isInIframe) {
-          // 监听父窗口主动推送的主题消息
           window.addEventListener("message", function (event) {
             if (event.data && typeof event.data.theme === "string") {
               const theme = event.data.theme;
@@ -66,40 +67,6 @@
           } catch (e) {}
           applyThemeToDOM(savedTheme);
         }
-      })();
-    </script>
-      <script>
-      (function () {
-        if (window.self === window.top) return;
-        var reported = {};
-        window.addEventListener("error", function (event) {
-          // 资源加载失败的 error 事件没有 message，此处仅上报 JS 运行时错误
-          if (!event || !event.message) return;
-          var key =
-            event.message + "|" + (event.filename || "") + "|" + (event.lineno || 0);
-          if (reported[key]) return; // 相同错误只上报一次，避免渲染循环刷屏
-          reported[key] = true;
-          try {
-            window.parent.postMessage(
-              {
-                type: "sandbox-runtime-error",
-                payload: {
-                  message: String(event.message).slice(0, 500),
-                  filename: event.filename || "",
-                  lineno: event.lineno || 0,
-                  colno: event.colno || 0,
-                  stack:
-                    event.error && event.error.stack
-                      ? String(event.error.stack).slice(0, 2000)
-                      : ""
-                }
-              },
-              "*"
-            );
-          } catch (e) {
-            /* 上报失败不影响页面运行 */
-          }
-        });
       })();
     </script>
   </head>
