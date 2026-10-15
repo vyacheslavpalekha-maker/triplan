@@ -159,9 +159,9 @@ export function sessionDate(raceDate: string, weeksToRace: number, weekNumber: n
 }
 
 export const MIN_PLAN_WEEKS = 4;
-export const MAX_PLAN_WEEKS = 30;
+export const MAX_PLAN_WEEKS = 52;
 
-/** Сколько недель плана даёт дата старта: от сегодня до гонки, в пределах 4–30. */
+/** Сколько недель плана даёт дата старта: от сегодня до гонки, в пределах 4–52. */
 export function weeksUntilRace(raceDate: string, today = new Date()): number {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(raceDate)) return MIN_PLAN_WEEKS;
   const days = Math.round((startOfDay(parseLocalDate(raceDate)).getTime() - startOfDay(today).getTime()) / 86400000);

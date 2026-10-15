@@ -85,7 +85,7 @@ export const RaceConfigForm: React.FC<Props> = ({ raceConfig, onChange, profile 
             style={{ backgroundColor: 'var(--bg-tertiary)', accentColor: 'var(--accent-primary)' }} />
           <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
             <span>4 недели</span>
-            <span>30 недель</span>
+            <span>52 недели</span>
           </div>
         </div>
 
