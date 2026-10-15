@@ -1,6 +1,7 @@
 import React from 'react';
 import { RaceConfig, Distance, DISTANCE_INFO, AthleteProfile } from '../types';
 import { calculateTargetTimes, analyzeGoalRealism } from '../goalAnalyzer';
+import { MAX_PLAN_WEEKS, MIN_PLAN_WEEKS, weeksUntilRace } from '../lib/schedule';
 
 interface Props {
   raceConfig: RaceConfig;
@@ -68,10 +69,8 @@ export const RaceConfigForm: React.FC<Props> = ({ raceConfig, onChange, profile 
           <input type="date" value={raceConfig.raceDate}
             onChange={(e) => {
               const date = e.target.value;
-              const today = new Date();
-              const raceDay = new Date(date);
-              const weeks = Math.max(4, Math.round((raceDay.getTime() - today.getTime()) / (7 * 24 * 60 * 60 * 1000)));
-              onChange({ ...raceConfig, raceDate: date, weeksToRace: weeks });
+              if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+              onChange({ ...raceConfig, raceDate: date, weeksToRace: weeksUntilRace(date) });
             }}
             className="garmin-input w-full" />
         </div>
@@ -80,7 +79,7 @@ export const RaceConfigForm: React.FC<Props> = ({ raceConfig, onChange, profile 
           <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>
             Недель до старта: <span className="font-bold" style={{ color: 'var(--accent-primary)' }}>{raceConfig.weeksToRace}</span>
           </label>
-          <input type="range" min={4} max={30} value={raceConfig.weeksToRace}
+          <input type="range" min={MIN_PLAN_WEEKS} max={MAX_PLAN_WEEKS} value={Math.min(MAX_PLAN_WEEKS, Math.max(MIN_PLAN_WEEKS, raceConfig.weeksToRace))}
             onChange={(e) => update('weeksToRace', parseInt(e.target.value))}
             className="w-full h-2 rounded-lg appearance-none cursor-pointer"
             style={{ backgroundColor: 'var(--bg-tertiary)', accentColor: 'var(--accent-primary)' }} />
