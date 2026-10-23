@@ -4,6 +4,14 @@
 
 Рабочая версия: [vyacheslavpalekha-maker.github.io/triplan](https://vyacheslavpalekha-maker.github.io/triplan/)
 
+<p align="center">
+  <a href="https://vyacheslavpalekha-maker.github.io/triplan/">
+    <img src="docs/screenshots/today-dark.png" width="270" alt="Экран «Сегодня»: тренировка дня, дни до старта, готовность" title="Открыть приложение" />
+  </a>
+  <img src="docs/screenshots/week-light.png" width="270" alt="Доска недели: семь дней, перенос тренировок, фазы подготовки" />
+  <img src="docs/screenshots/journal-light.png" width="270" alt="Журнал выполненных тренировок со статистикой" />
+</p>
+
 ## Задача
 
 Спортсмену, который готовится к старту без ежедневного созвона с тренером, нужен один экран: что делать сегодня, как выглядит неделя и где зафиксировать выполненную работу. План должен жить на телефоне и открываться без отдельного магазина приложений.
@@ -27,7 +35,7 @@ React, TypeScript, Vite, Tailwind CSS. Приложение собрано в Cu
 
 ## Карточка для маркетплейса Зерокодера
 
-Эти поля можно перенести в анкету портфолио как есть.
+Эти поля можно перенести в анкету портфолио как есть. Обложку карточки можно взять из `docs/screenshots/today-dark.png`, дополнительные кадры — оттуда же.
 
 **Название**
 
